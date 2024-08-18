@@ -1,12 +1,9 @@
-# VMware Tanzu Application Service > Butler
+# R*bert
 
 ## Prerequisites
 
-Required
+One of:
 
+* An LLM from [Ollama](https://ollama.com) downloaded and running
+* A [Groq Cloud](https://groq.com) account and API Key
 
-
-Optional
-
-* [VMware Tanzu Network](https://network.pivotal.io) account credentials
-* [VMware Tanzu Operations Manager](https://tanzu.vmware.com/platform/pcf-components/pcf-ops-manager) admin account credentials (or client id and client secret)
