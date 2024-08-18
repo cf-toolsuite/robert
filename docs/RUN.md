@@ -6,7 +6,7 @@
 
 Before launching the app:
 
-* Create a `config` folder which would be a sibling of the `build` folder.  Create a file named `creds.yml` inside that folder.  Add our API key into that file.
+* Create a `config` folder which would be a sibling of the `build` folder.  Create a file named `creds.yml` inside that folder.  Add your own API key into that file.
 
 ```
 spring:
@@ -53,3 +53,11 @@ to invocations of
 ```
 ./gradlew bootRun
 ```
+
+### with Docker
+
+```
+❯ ./gradlew buildBootImage
+❯ docker run --rm -p 8080:8080 -e SPRING_AI_OPENAI_API_KEY={redacted} -v ${PWD}/tmp:/tmp --mount type=bind,source=${PWD}/logs,target=/workspace/logs docker.io/library/robert:0.0.1-SNAPSHOT
+```
+> Replace `{redacted}` above with your own Groq Cloud API key
