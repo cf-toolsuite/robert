@@ -36,8 +36,10 @@ out/
 /.nb-gradle/
 
 ### VS Code ###
+.history/
 .vscode/
 
 ### Miscellaneous ###
 tmp/
 config/
+logs/

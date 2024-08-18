@@ -1,0 +1,39 @@
+# R*bert
+
+## How to Run with Gradle
+
+### with Groq Cloud
+
+Before launching the app:
+
+* Create a `config` folder which would be a sibling of the `build` folder.  Create a file named `creds.yml` inside that folder.  Add our API key into that file.
+
+```
+spring:
+  ai:
+    openai:
+      api-key: {REDACTED}
+```
+> Replace `{REDACTED}` above with your Groq Cloud API key
+
+Open a terminal shell and execute
+
+```
+./gradlew bootRun
+```
+
+### with Ollama
+
+Open a terminal shell and execute
+
+```
+ollama pull llama3.1:70b
+ollama run llama3.1:70b
+```
+
+Open another terminal shell and execute
+
+```
+./gradlew bootRun -Dspring.profiles.active=ollama
+```
+> You'll need to manually stop to the application with `Ctrl+C`
