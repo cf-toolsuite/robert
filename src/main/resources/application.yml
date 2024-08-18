@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: robert
+
+  ai:
+    openai:
+      base_url: https://api.groq.com/openai
+      chat:
+        options:
+          model: llama3-70b-8192
+          temperature: 0.5
+
+  config:
+    import: "optional:file:./config/creds.yml"
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: ollama
+
+  ai:
+    ollama:
+      chat:
+        options:
+          model: llama3.1:70b
+          top-k: 10
+          top-p: 0.5
+
