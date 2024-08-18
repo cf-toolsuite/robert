@@ -39,3 +39,17 @@ Open another terminal shell and execute
 > You'll need to manually stop to the application with `Ctrl+C`
 
 ^ If you want to override the model being used you could add `-Dspring.ai.ollama.chat.options.model={model_name}` to the above and replace `{model_name}` with a supported model.
+
+### with alternate prompt
+
+You may want to override the default, built-in refactoring prompt.  To do that make sure the text of your new prompt contains a `{source}` placeholder, then append, e.g.,
+
+```
+-Dprompt="wonderful new prompt that reduces tech debt in your {source}"
+```
+
+to invocations of
+
+```
+./gradlew bootRun
+```
