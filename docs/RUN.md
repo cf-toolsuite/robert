@@ -37,3 +37,5 @@ Open another terminal shell and execute
 ./gradlew bootRun -Dspring.profiles.active=ollama
 ```
 > You'll need to manually stop to the application with `Ctrl+C`
+
+^ If you want to override the model being used you could add `-Dspring.ai.ollama.chat.options.model={model_name}` to the above and replace `{model_name}` with a supported model.
