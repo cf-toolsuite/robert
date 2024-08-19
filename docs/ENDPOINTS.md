@@ -88,3 +88,13 @@ Date:   Fri Aug 16 19:39:26 2024 -0700
 
     Merge branch 'main' of https://github.com/cf-toolsuite/cf-butler
 ```
+
+#### Validating each refactor request
+
+To [validate what had been updated](https://stackoverflow.com/questions/9903541/finding-diff-between-current-and-last-version).
+
+```
+❯ cd tmp/cf-butler
+❯ git show
+```
+> Use the up and down arrow keys to scroll through changes.  Type `:q` to exit.
