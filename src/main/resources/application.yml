@@ -7,7 +7,7 @@ spring:
       base_url: https://api.groq.com/openai
       chat:
         options:
-          model: llama3-70b-8192
+          model: llama-3.1-70b-versatile
           temperature: 0.5
 
   config:
