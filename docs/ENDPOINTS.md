@@ -11,16 +11,16 @@ Both endpoints below work with [GitSettings.java](../src/main/java/org/cftoolsui
 The minimum required inputs are:
 
 * `uri` - a remote Git repository, must be accessible via `https` protocol
-* `filePaths` - a set of either relative file paths from the root of the repository or a package names
+* `filePaths` - either a set of relative file paths from the root of the repository or a set of package names
 
 Optional inputs are:
 
 * `username` - your Git repository provider account username
 * `password` - your Git repository provider account password
 * `commit` - a commit hash, if not supplied the latest commit on origin/main is used
-* `pushToRemoteEnabled` - whether or not to git push updates on your local branch to remote; if you've set this value to `true` then you must also supply `username` and `password` values
+* `pushToRemoteEnabled` - whether or not to git push updates on your local branch to remote; if you've set this value to `true` then you must also supply `username` and `password` values as push operation is authenticated
 
-Note: if you're working with a private repository you will be required to supply `username` and `password` values, as clone and push operations are authenticated
+Note: if you're working with a private repository you will be required to supply `username` and `password` values, as clone and push operations will be authenticated
 
 ### Clone
 

@@ -13,6 +13,10 @@ spring:
   config:
     import: "optional:file:./config/creds.yml"
 
+  threads:
+    virtual:
+      enabled: true
+
 ---
 
 spring:
@@ -27,4 +31,3 @@ spring:
           model: llama3.1:70b
           top-k: 10
           top-p: 0.5
-
