@@ -27,13 +27,16 @@ public class GitController {
     private static final Logger log = LoggerFactory.getLogger(GitController.class);
 
     private GitClient client;
-    private RefactoringService service;
+    private RefactoringService refactoringService;
+    private PullRequestService pullRequestService;
 
     public GitController(
         GitClient client,
-        RefactoringService service) {
+        RefactoringService refactoringService,
+        PullRequestService pullRequestService) {
         this.client = client;
-        this.service = service;
+        this.refactoringService = refactoringService;
+        this.pullRequestService = pullRequestService;
     }
 
     @PostMapping("/clone")
@@ -65,7 +68,7 @@ public class GitController {
                         .forEach(entry -> {
                             executor.schedule(() -> {
                                 log.info("-- Attempting to refactor {}", entry.getKey());
-                                String refactoredValue = service.refactor(entry.getValue());
+                                String refactoredValue = refactoringService.refactor(entry.getValue());
                                 targetMap.put(entry.getKey(), refactoredValue);
                             }, Long.parseLong(delay), TimeUnit.SECONDS);
                         });
@@ -73,10 +76,11 @@ public class GitController {
             executor.awaitTermination(Long.MAX_VALUE, TimeUnit.MINUTES);
             String branchName = "refactor-" + UUID.randomUUID().toString();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            String commitMessage = String.format("Refactored by %s on %s", service.getClass().getName(), LocalDateTime.now().format(formatter));
+            String commitMessage = String.format("Refactored by %s on %s", refactoringService.getClass().getName(), LocalDateTime.now().format(formatter));
             client.writeFiles(repo, targetMap, branchName, commitMessage);
             log.info("Refactoring completed on {}.", branchName);
             client.push(settings, repo, branchName);
+            pullRequestService.pr(repo, settings, branchName, commitMessage);
         } catch (GitAPIException | IOException | InterruptedException e) {
             log.error("Trouble cloning Git repository", e);
         }

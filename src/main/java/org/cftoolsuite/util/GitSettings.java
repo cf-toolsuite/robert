@@ -11,7 +11,8 @@ public record GitSettings(
         String password,
         String commit,
         Set<String> filePaths,
-        boolean pushToRemoteEnabled) {
+        boolean pushToRemoteEnabled,
+        boolean pullRequestEnabled) {
 
     public GitSettings(
             String uri,
@@ -19,13 +20,15 @@ public record GitSettings(
             String password,
             String commit,
             Set<String> filePaths,
-            boolean pushToRemoteEnabled) {
+            boolean pushToRemoteEnabled,
+            boolean pullRequestEnabled) {
         this.uri = (uri != null) ? uri : "";
         this.username = username;
         this.password = (password != null) ? password : "";
         this.commit = commit;
         this.filePaths = (filePaths != null) ? filePaths : new HashSet<>();
         this.pushToRemoteEnabled = pushToRemoteEnabled;
+        this.pullRequestEnabled = pullRequestEnabled;
     }
 
     public boolean isAuthenticated() {
@@ -39,6 +42,7 @@ public record GitSettings(
         private String commit;
         private Set<String> filePaths = new HashSet<>();
         private boolean pushToRemoteEnabled;
+        private boolean pullRequestEnabled;
 
         public GitSettingsBuilder uri(String uri) {
             this.uri = uri;
@@ -70,8 +74,13 @@ public record GitSettings(
             return this;
         }
 
+        public GitSettingsBuilder pullRequestEnabled(boolean pullRequestEnabled) {
+            this.pullRequestEnabled = pullRequestEnabled;
+            return this;
+        }
+
         public GitSettings build() {
-            return new GitSettings(uri, username, password, commit, filePaths, pushToRemoteEnabled);
+            return new GitSettings(uri, username, password, commit, filePaths, pushToRemoteEnabled, pullRequestEnabled);
         }
     }
 

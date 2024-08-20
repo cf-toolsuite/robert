@@ -2,7 +2,7 @@
 
 ## How to Build
 
-```
+```bash
 ./gradlew clean build
 ```
 
@@ -17,7 +17,7 @@ The below represent a collection of Gradle profiles available in build.gradle
   * adds a dependency on [spring-ai-ollama-spring-boot-starter](https://docs.spring.io/spring-ai/reference/api/chat/ollama-chat.html)
 
 
-```
+```bash
 ./gradlew clean build -Pprofile=ollama
 ```
 > Work with [your choice](https://github.com/ollama/ollama?tab=readme-ov-file#model-library) of Ollama LLMs

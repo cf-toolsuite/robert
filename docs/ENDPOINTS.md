@@ -19,12 +19,13 @@ Optional inputs are:
 * `password` - your Git repository provider account password
 * `commit` - a commit hash, if not supplied the latest commit on origin/main is used
 * `pushToRemoteEnabled` - whether or not to git push updates on your local branch to remote; if you've set this value to `true` then you must also supply `username` and `password` values as push operation is authenticated
+* `pullRequestEnabled` - whether or not to file a pull request; if you've set this value to `true` then you must also supply `username` and `password` values as pull request operation is authenticated
 
 Note: if you're working with a private repository you will be required to supply `username` and `password` values, as clone and push operations will be authenticated
 
 ### Clone
 
-```
+```python
 POST /clone
 ```
 
@@ -32,7 +33,7 @@ Clones source from a Git repository to your local desktop
 
 ### Refactor
 
-```
+```python
 POST /refactor
 ```
 
@@ -42,7 +43,7 @@ Clones and refactors source
 
 #### Sample interaction
 
-```
+```bash
 ❯ http POST :8080/refactor uri=https://github.com/cf-toolsuite/cf-butler.git filePaths:='["org.cftoolsuite.cfapp.domain.accounting.application"]'
 
 HTTP/1.1 200
@@ -54,7 +55,7 @@ Keep-Alive: timeout=60
 
 #### Sample log output
 
-```
+```bash
 21:49:22.783 [main] INFO  org.cftoolsuite.RobertApplication - Started RobertApplication in 1.911 seconds (process running for 2.158)
 21:49:28.657 [http-nio-8080-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
 21:49:28.658 [http-nio-8080-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
@@ -70,11 +71,12 @@ Keep-Alive: timeout=60
 21:49:34.195 [http-nio-8080-exec-1] INFO  org.cftoolsuite.util.GitController - -- Attempting to refactor src/main/java/org/cftoolsuite/cfapp/domain/accounting/application/AppUsageReport.java
 21:49:35.359 [http-nio-8080-exec-1] INFO  org.cftoolsuite.util.GitController - Refactoring completed on refactor-647ee41c-8ff1-4c40-bfcb-2e5567193850.
 21:49:35.360 [http-nio-8080-exec-1] INFO  org.cftoolsuite.util.GitClient - Push to remote not enabled!
+...
 ```
 
 #### Sample git log
 
-```
+```bash
 ❯ cd tmp/cf-butler
 ❯ git --no-pager log --max-count=2
 commit 0a4008ee85162580c9627eefe1eee0c7b9dc68d0 (HEAD -> refactor-647ee41c-8ff1-4c40-bfcb-2e5567193850)
@@ -95,7 +97,7 @@ Date:   Fri Aug 16 19:39:26 2024 -0700
 
 To [validate what had been updated](https://stackoverflow.com/questions/9903541/finding-diff-between-current-and-last-version).
 
-```
+```bash
 ❯ cd tmp/cf-butler
 ❯ git show
 ```
@@ -103,7 +105,7 @@ To [validate what had been updated](https://stackoverflow.com/questions/9903541/
 
 or if you have a comparison tool like [Beyond Compare](https://www.scootersoftware.com/) installed, you could
 
-```
+```bash
 ❯ git config --global diff.tool bc
 ❯ git config --global difftool.bc.path /usr/bin/bcompare
 ❯ git config --global difftool.bc.trustExitCode true
@@ -111,7 +113,7 @@ or if you have a comparison tool like [Beyond Compare](https://www.scootersoftwa
 
 then
 
-```
+```bash
 ❯ cd tmp/cf-butler
 ❯ git difftool --dir-diff refactor-{uuid} main
 ```
