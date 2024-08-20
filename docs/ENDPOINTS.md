@@ -38,6 +38,8 @@ POST /refactor
 
 Clones and refactors source
 
+> R*bert clones the remote repository, iterates over a set of file paths, and applies updates to each file based upon criteria in your prompt.  It writes updates to a local branch, and if configured to do so, it will push those updates back to origin.  That mentioned, it does not take into consideration relationships and/or transitive dependencies within source.
+
 #### Sample interaction
 
 ```
