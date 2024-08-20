@@ -7,6 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 
 public record GitSettings(
         String uri,
+        String base,
         String username,
         String password,
         String commit,
@@ -16,6 +17,7 @@ public record GitSettings(
 
     public GitSettings(
             String uri,
+            String base,
             String username,
             String password,
             String commit,
@@ -23,6 +25,7 @@ public record GitSettings(
             boolean pushToRemoteEnabled,
             boolean pullRequestEnabled) {
         this.uri = (uri != null) ? uri : "";
+        this.base = StringUtils.isNotBlank(base) ? base : "main";
         this.username = username;
         this.password = (password != null) ? password : "";
         this.commit = commit;
@@ -37,6 +40,7 @@ public record GitSettings(
 
     public static class GitSettingsBuilder {
         private String uri = "";
+        private String base = "main";
         private String username;
         private String password = "";
         private String commit;
@@ -46,6 +50,11 @@ public record GitSettings(
 
         public GitSettingsBuilder uri(String uri) {
             this.uri = uri;
+            return this;
+        }
+
+        public GitSettingsBuilder base(String base) {
+            this.base = base;
             return this;
         }
 
@@ -80,7 +89,7 @@ public record GitSettings(
         }
 
         public GitSettings build() {
-            return new GitSettings(uri, username, password, commit, filePaths, pushToRemoteEnabled, pullRequestEnabled);
+            return new GitSettings(uri, base, username, password, commit, filePaths, pushToRemoteEnabled, pullRequestEnabled);
         }
     }
 

@@ -29,7 +29,7 @@ public class GithubPullRequestService implements PullRequestService {
                 GHPullRequest pullRequest = repository.createPullRequest(
                     title,
                     localRepository.getBranch(),
-                    title,
+                    settings.base(),
                     body
                 );
                 log.info("Pull request created: {}", pullRequest.getHtmlUrl());
