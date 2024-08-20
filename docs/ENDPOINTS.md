@@ -38,7 +38,7 @@ POST /refactor
 
 Clones and refactors source
 
-> R*bert clones the remote repository, iterates over a set of file paths, and applies updates to each file based upon criteria in your prompt.  It writes updates to a local branch, and if configured to do so, it will push those updates back to origin.  That mentioned, it does not take into consideration relationships and/or transitive dependencies within source.
+> R*bert clones the remote repository, iterates over a set of file paths, and applies updates to each file based upon criteria in your prompt.  It writes updates to a local branch, and if configured to do so, it will push those updates back to origin.  Note: Refactoring does not take into account dependencies or relationships within the set of file paths.
 
 #### Sample interaction
 
@@ -100,3 +100,19 @@ To [validate what had been updated](https://stackoverflow.com/questions/9903541/
 ❯ git show
 ```
 > Use the up and down arrow keys to scroll through changes.  Type `:q` to exit.
+
+or if you have a comparison tool like [Beyond Compare](https://www.scootersoftware.com/) installed, you could
+
+```
+❯ git config --global diff.tool bc
+❯ git config --global difftool.bc.path /usr/bin/bcompare
+❯ git config --global difftool.bc.trustExitCode true
+```
+
+then
+
+```
+❯ cd tmp/cf-butler
+❯ git difftool --dir-diff refactor-{uuid} main
+```
+> Replace `{uuid}` with the suffix of the refactored branch
