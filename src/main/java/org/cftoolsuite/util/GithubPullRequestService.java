@@ -22,7 +22,7 @@ public class GithubPullRequestService implements PullRequestService {
 
     @Override
     public void pr(Repository localRepository, GitSettings settings, String title, String body) {
-        if (settings.pullRequestEnabled()) {
+        if (settings.pushToRemoteEnabled() && settings.pullRequestEnabled()) {
             try {
                 GitHub github = new GitHubBuilder().withPassword(settings.username(), settings.password()).build();
                 GHRepository repository = determineGithubRepository(github, getRemoteUrl(localRepository));
