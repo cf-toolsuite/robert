@@ -15,6 +15,7 @@ The minimum required inputs are:
 
 Optional inputs are:
 
+* `base` - the base branch of your repository where changes would eventually be pulled into; defaults to `main`
 * `username` - your Git repository provider account username
 * `password` - your Git repository provider account password
   * if you have a Github account, then this value should be set to a classic [personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic) with full `repo` permissions.
