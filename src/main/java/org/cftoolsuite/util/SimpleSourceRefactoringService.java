@@ -1,12 +1,18 @@
 package org.cftoolsuite.util;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.SpringApplication;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
 @Service
-public class SimpleJavaSourceRefactoringService implements RefactoringService {
+public class SimpleSourceRefactoringService implements RefactoringService {
+
+    private static final Logger log = LoggerFactory.getLogger(SimpleSourceRefactoringService.class);
 
     private static final String DEFAULT_PROMPT =
         """
@@ -21,12 +27,23 @@ public class SimpleJavaSourceRefactoringService implements RefactoringService {
         {source}
         """;
 
+    private ApplicationContext context;
     private ChatClient client;
     private String prompt;
 
-    public SimpleJavaSourceRefactoringService(ChatClient.Builder clientBuilder, @Value("#{systemProperties['prompt'] ?: ''}") String prompt) {
+    public SimpleSourceRefactoringService(
+        ApplicationContext context,
+        ChatClient.Builder clientBuilder,
+        @Value("#{systemProperties['prompt'] ?: ''}") String prompt
+    ) {
+        this.context = context;
         this.client = clientBuilder.build();
-        this.prompt = StringUtils.isNotBlank(prompt) && prompt.contains("{source}") ? prompt : DEFAULT_PROMPT;
+        this.prompt = StringUtils.isNotBlank(prompt) ? prompt : DEFAULT_PROMPT;
+        log.trace("Initializing {} with {}", SimpleSourceRefactoringService.class.getName(), this.prompt);
+        if (!this.prompt.contains("{source}")) {
+            log.error("Prompt must contain {source} placeholder!  Shutting down.");
+            initiateShutdown(1);
+        }
     }
 
     public String refactor(String source) {
@@ -40,4 +57,9 @@ public class SimpleJavaSourceRefactoringService implements RefactoringService {
  				.call()
                 .content();
     }
+
+    private void initiateShutdown(int returnCode){
+        SpringApplication.exit(this.context, () -> returnCode);
+    }
+
 }
