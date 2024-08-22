@@ -2,11 +2,8 @@ package org.cftoolsuite.util;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.List;
 
 import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.transport.RemoteConfig;
-import org.eclipse.jgit.transport.URIish;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
@@ -48,24 +45,6 @@ public class GithubPullRequestService implements PullRequestService {
         GHRepository result = github.getRepository(owner + "/" + repoName);
         log.info("GitHub repository is {}", result.getFullName());
         return result;
-    }
-
-    private String getRemoteUrl(Repository repository) throws URISyntaxException {
-        String remoteUrl = null;
-        List<RemoteConfig> remotes = RemoteConfig.getAllRemoteConfigs(repository.getConfig());
-        for (RemoteConfig remote : remotes) {
-            if ("origin".equals(remote.getName())) {
-                List<URIish> uris = remote.getURIs();
-                if (!uris.isEmpty()) {
-                    remoteUrl = uris.get(0).toString();
-                    break;
-                }
-            }
-        }
-        if (remoteUrl == null) {
-            throw new IllegalStateException("No 'origin' remote found.");
-        }
-        return remoteUrl;
     }
 
 }
