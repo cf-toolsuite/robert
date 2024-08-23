@@ -77,3 +77,26 @@ to invocations of
 ```bash
 ./gradlew bootRun
 ```
+
+### with alternate Git remote targets
+
+Currently, there's pull request support for:
+
+* Atlassian BitBucket (bitbucket)
+* Azure Devops (azure-devops)
+* Github (github)
+* Gitlab (gitlab)
+
+You will need to enable a Spring profile if you want activate a variant provider, for example:
+
+```bash
+-Dspring.profiles.active=default,groq-cloud,github
+```
+> Activates Groq Cloud as the LLM provider and Github as the remote target for pull requests
+
+Another example:
+
+```bash
+-Dspring.profiles.active=default,ollama,gitlab
+```
+> Activates Ollama as the LLM provider and Gitlab as the remote target for pull requests

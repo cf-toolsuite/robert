@@ -15,6 +15,7 @@ java {
 
 repositories {
 	mavenCentral()
+	maven { url 'https://packages.atlassian.com/repository/public' }
 	maven { url 'https://repo.spring.io/milestone' }
 }
 
@@ -35,7 +36,7 @@ dependencies {
 	implementation 'org.eclipse.jgit:org.eclipse.jgit:6.10.0.202406032230-r'
 	implementation 'org.kohsuke:github-api:1.324'
 	implementation 'org.gitlab4j:gitlab4j-api:5.6.0'
-	implementation 'com.atlassian.bitbucket.server:bitbucket-api:8.19.6'
+	implementation 'io.github.cdancy:bitbucket-rest:3.1.1'
 	implementation 'io.github.hkarthik7:azd:5.0.12'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

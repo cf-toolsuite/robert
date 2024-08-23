@@ -10,9 +10,11 @@ import org.kohsuke.github.GitHub;
 import org.kohsuke.github.GitHubBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Component;
 
-@Service
+@Component
+@Profile("github")
 public class GithubPullRequestService implements PullRequestService {
 
     private static Logger log = LoggerFactory.getLogger(GithubPullRequestService.class);
