@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: default,groq-cloud,github
+    active: default,groq-cloud
 
   application:
     name: robert
