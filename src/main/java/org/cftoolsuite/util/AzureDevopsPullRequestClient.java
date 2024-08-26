@@ -12,14 +12,12 @@ import org.azd.git.types.GitRepository;
 import org.eclipse.jgit.lib.Repository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component
-@Profile("azure-devops")
-public class AzureDevopsPullRequestService implements PullRequestService {
+public class AzureDevopsPullRequestClient implements PullRequestClient {
 
-    private static Logger log = LoggerFactory.getLogger(AzureDevopsPullRequestService.class);
+    private static Logger log = LoggerFactory.getLogger(AzureDevopsPullRequestClient.class);
 
     @Override
     public void pr(Repository localRepository, GitSettings settings, String title, String body) {
@@ -72,6 +70,11 @@ public class AzureDevopsPullRequestService implements PullRequestService {
     private String[] determineProjectInfo(String remoteUrl) {
         String[] urlParts = remoteUrl.split("/");
         return new String[]{urlParts[urlParts.length - 2], urlParts[urlParts.length - 1].replace(".git", "")};
+    }
+
+    @Override
+    public String uriPrefix() {
+        return "https://dev.azure.com/";
     }
 
 }

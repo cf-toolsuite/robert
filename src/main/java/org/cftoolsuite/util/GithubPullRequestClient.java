@@ -10,14 +10,12 @@ import org.kohsuke.github.GitHub;
 import org.kohsuke.github.GitHubBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component
-@Profile("github")
-public class GithubPullRequestService implements PullRequestService {
+public class GithubPullRequestClient implements PullRequestClient {
 
-    private static Logger log = LoggerFactory.getLogger(GithubPullRequestService.class);
+    private static Logger log = LoggerFactory.getLogger(GithubPullRequestClient.class);
 
     @Override
     public void pr(Repository localRepository, GitSettings settings, String title, String body) {
@@ -47,6 +45,11 @@ public class GithubPullRequestService implements PullRequestService {
         GHRepository result = github.getRepository(owner + "/" + repoName);
         log.info("GitHub repository is {}", result.getFullName());
         return result;
+    }
+
+    @Override
+    public String uriPrefix() {
+        return "https://github.com/";
     }
 
 }

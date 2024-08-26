@@ -12,14 +12,12 @@ import org.gitlab4j.api.models.MergeRequest;
 import org.gitlab4j.api.models.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component
-@Profile("gitlab")
-public class GitlabPullRequestService implements PullRequestService {
+public class GitlabPullRequestClient implements PullRequestClient {
 
-    private static Logger log = LoggerFactory.getLogger(GitlabPullRequestService.class);
+    private static Logger log = LoggerFactory.getLogger(GitlabPullRequestClient.class);
 
     @Override
     public void pr(Repository localRepository, GitSettings settings, String title, String body) {
@@ -62,6 +60,11 @@ public class GitlabPullRequestService implements PullRequestService {
         } catch (GitLabApiException e) {
             throw new RuntimeException("Error fetching user information", e);
         }
+    }
+
+    @Override
+    public String uriPrefix() {
+        return "https://gitlab.com/";
     }
 
 }

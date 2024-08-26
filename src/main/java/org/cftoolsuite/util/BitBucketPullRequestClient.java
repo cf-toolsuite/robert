@@ -7,7 +7,6 @@ import java.util.Collections;
 import org.eclipse.jgit.lib.Repository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import com.cdancy.bitbucket.rest.BitbucketApi;
@@ -19,10 +18,9 @@ import com.cdancy.bitbucket.rest.domain.pullrequest.PullRequest;
 import com.cdancy.bitbucket.rest.options.CreatePullRequest;
 
 @Component
-@Profile("bitbucket")
-public class BitBucketPullRequestService implements PullRequestService {
+public class BitBucketPullRequestClient implements PullRequestClient {
 
-    private static Logger log = LoggerFactory.getLogger(BitBucketPullRequestService.class);
+    private static Logger log = LoggerFactory.getLogger(BitBucketPullRequestClient.class);
 
     @Override
     public void pr(Repository localRepository, GitSettings settings, String title, String body) {
@@ -89,5 +87,10 @@ public class BitBucketPullRequestService implements PullRequestService {
     private String[] determineProjectInfo(String remoteUrl) {
         String[] urlParts = remoteUrl.split("/");
         return new String[]{urlParts[urlParts.length - 2], urlParts[urlParts.length - 1].replace(".git", "")};
+    }
+
+    @Override
+    public String uriPrefix() {
+        return "https://bitbucket.org/";
     }
 }

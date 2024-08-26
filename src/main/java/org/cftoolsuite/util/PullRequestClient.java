@@ -7,8 +7,11 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 
-public interface PullRequestService {
+public interface PullRequestClient {
+
     void pr(Repository repo, GitSettings settings, String title, String body);
+
+    String uriPrefix();
 
     default String getRemoteUrl(Repository repository) throws URISyntaxException {
         String remoteUrl = null;
@@ -27,4 +30,5 @@ public interface PullRequestService {
         }
         return remoteUrl;
     }
+
 }
