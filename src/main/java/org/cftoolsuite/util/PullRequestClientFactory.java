@@ -20,11 +20,11 @@ public class PullRequestClientFactory {
                     .stream()
                         .filter(
                             client ->
-                                client
-                                    .uriPrefix()
-                                    .startsWith(uri))
-                                    .findFirst()
-                                    .orElseThrow(() -> new IllegalArgumentException("No client found for uri: " + uri));
+                                uri
+                                    .startsWith(client.uriPrefix())
+                        )
+                        .findFirst()
+                        .orElseThrow(() -> new IllegalArgumentException("No client found for uri: " + uri));
     }
 
 }
