@@ -1,21 +1,29 @@
 spring:
+  profiles:
+    active: default,groq-cloud
+
   application:
     name: robert
-
-  ai:
-    openai:
-      base_url: https://api.groq.com/openai
-      chat:
-        options:
-          model: llama-3.1-70b-versatile
-          temperature: 0.5
-
-  config:
-    import: "optional:file:./config/creds.yml"
 
   threads:
     virtual:
       enabled: true
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: groq-cloud
+    import: "optional:file:./config/creds.yml"
+
+  ai:
+      openai:
+        base_url: https://api.groq.com/openai
+        chat:
+          options:
+            model: llama-3.1-70b-versatile
+            temperature: 0.5
 
 ---
 

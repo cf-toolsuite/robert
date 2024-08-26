@@ -26,24 +26,24 @@ public class GitController {
 
     private static final Logger log = LoggerFactory.getLogger(GitController.class);
 
-    private GitClient client;
+    private GitClient gitClient;
     private RefactoringService refactoringService;
-    private PullRequestService pullRequestService;
+    private PullRequestClientFactory pullRequestClientFactory;
 
     public GitController(
-        GitClient client,
+        GitClient gitClient,
         RefactoringService refactoringService,
-        PullRequestService pullRequestService) {
-        this.client = client;
+        PullRequestClientFactory pullRequestClientFactory) {
+        this.gitClient = gitClient;
         this.refactoringService = refactoringService;
-        this.pullRequestService = pullRequestService;
+        this.pullRequestClientFactory = pullRequestClientFactory;
     }
 
     @PostMapping("/clone")
     public void clone(@RequestBody GitSettings settings) {
-        Repository repo = client.getRepository(settings);
+        Repository repo = gitClient.getRepository(settings);
         try {
-            client.getLatestCommit(repo);
+            gitClient.getLatestCommit(repo);
         } catch (GitAPIException | IOException e) {
             log.error("Trouble cloning Git repository", e);
         }
@@ -51,14 +51,14 @@ public class GitController {
 
     @PostMapping("/refactor")
     public void refactor(@RequestBody GitSettings settings, @Value("#{systemProperties['tpmDelay'] ?: '5'}") String delay) {
-        Repository repo = client.getRepository(settings);
+        Repository repo = gitClient.getRepository(settings);
         try {
             Map<String, String> sourceMap = null;
             Map<String, String> targetMap = new HashMap<>();
             if (StringUtils.isNotBlank(settings.commit())) {
-                sourceMap = client.readFiles(repo, settings.filePaths(), settings.commit());
+                sourceMap = gitClient.readFiles(repo, settings.filePaths(), settings.commit());
             } else {
-                sourceMap = client.readFiles(repo, settings.filePaths());
+                sourceMap = gitClient.readFiles(repo, settings.filePaths());
             }
             log.info("Found {} files to refactor.", sourceMap.size());
             ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
@@ -77,10 +77,10 @@ public class GitController {
             String branchName = "refactor-" + UUID.randomUUID().toString();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             String commitMessage = String.format("Refactored by %s on %s", refactoringService.getClass().getName(), LocalDateTime.now().format(formatter));
-            client.writeFiles(repo, targetMap, branchName, commitMessage);
+            gitClient.writeFiles(repo, targetMap, branchName, commitMessage);
             log.info("Refactoring completed on {}.", branchName);
-            client.push(settings, repo, branchName);
-            pullRequestService.pr(repo, settings, branchName, commitMessage);
+            gitClient.push(settings, repo, branchName);
+            pullRequestClientFactory.get(settings.uri()).pr(repo, settings, branchName, commitMessage);
         } catch (GitAPIException | IOException | InterruptedException e) {
             log.error("Trouble cloning Git repository", e);
         }
