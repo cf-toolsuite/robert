@@ -34,9 +34,9 @@ public class GitClient {
 
     private static Logger log = LoggerFactory.getLogger(GitClient.class);
 
-    public Repository getRepository(GitSettings settings) {
+    public Repository getRepository(GitRequest request) {
         Repository result = null;
-        String uri = settings.uri();
+        String uri = request.uri();
         Assert.hasText(uri, "URI of remote Git repository must be specified");
         Assert.isTrue(uri.startsWith("https://"), "URI scheme must be https");
         Assert.isTrue(uri.endsWith(".git"), "URI must end with .git");
@@ -52,9 +52,9 @@ public class GitClient {
                 .forEach(File::delete);
             }
             Files.deleteIfExists(p);
-            if (settings.isAuthenticated()) {
-                String username = settings.username();
-                String password = settings.password();
+            if (request.isAuthenticated()) {
+                String username = request.username();
+                String password = request.password();
                 Git
                     .cloneRepository()
                     .setURI(uri)
@@ -212,10 +212,10 @@ public class GitClient {
         }
     }
 
-    public void push(GitSettings settings, Repository repo, String branch) {
+    public void push(GitRequest request, Repository repo, String branch) {
         try (Git git = new Git(repo)) {
-            if (settings.pushToRemoteEnabled() && settings.isAuthenticated()) {
-                CredentialsProvider credentialsProvider = new UsernamePasswordCredentialsProvider(settings.username(), settings.password());
+            if (request.pushToRemoteEnabled() && request.isAuthenticated()) {
+                CredentialsProvider credentialsProvider = new UsernamePasswordCredentialsProvider(request.username(), request.password());
                 git.push()
                     .setRemote("origin")
                     .setCredentialsProvider(credentialsProvider)

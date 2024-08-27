@@ -18,15 +18,15 @@ public class GithubPullRequestClient implements PullRequestClient {
     private static Logger log = LoggerFactory.getLogger(GithubPullRequestClient.class);
 
     @Override
-    public void pr(Repository localRepository, GitSettings settings, String title, String body) {
-        if (settings.pushToRemoteEnabled() && settings.pullRequestEnabled()) {
+    public void pr(Repository localRepository, GitRequest request, String title, String body) {
+        if (request.pushToRemoteEnabled() && request.pullRequestEnabled()) {
             try {
-                GitHub github = new GitHubBuilder().withPassword(settings.username(), settings.password()).build();
+                GitHub github = new GitHubBuilder().withPassword(request.username(), request.password()).build();
                 GHRepository repository = determineGithubRepository(github, getRemoteUrl(localRepository));
                 GHPullRequest pullRequest = repository.createPullRequest(
                     title,
                     localRepository.getBranch(),
-                    settings.base(),
+                    request.base(),
                     body
                 );
                 log.info("Pull request created: {}", pullRequest.getHtmlUrl());

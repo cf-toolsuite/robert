@@ -20,11 +20,11 @@ public class AzureDevopsPullRequestClient implements PullRequestClient {
     private static Logger log = LoggerFactory.getLogger(AzureDevopsPullRequestClient.class);
 
     @Override
-    public void pr(Repository localRepository, GitSettings settings, String title, String body) {
-        if (settings.pushToRemoteEnabled() && settings.pullRequestEnabled()) {
+    public void pr(Repository localRepository, GitRequest request, String title, String body) {
+        if (request.pushToRemoteEnabled() && request.pullRequestEnabled()) {
             try {
-                String organizationUrl = extractOrganizationUrl(settings.uri());
-                Connection connection = new Connection(organizationUrl, settings.password());
+                String organizationUrl = extractOrganizationUrl(request.uri());
+                Connection connection = new Connection(organizationUrl, request.password());
 
                 GitApi gitApi = new GitApi(connection);
 
@@ -36,7 +36,7 @@ public class AzureDevopsPullRequestClient implements PullRequestClient {
 
                 // Create the pull request
                 String sourceRefName = "refs/heads/" + localRepository.getBranch();
-                String targetRefName = "refs/heads/" + settings.base();
+                String targetRefName = "refs/heads/" + request.base();
 
                 GitPullRequest createdPR = gitApi.createPullRequest(
                     repo.getId(),

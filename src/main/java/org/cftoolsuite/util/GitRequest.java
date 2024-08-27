@@ -5,7 +5,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 
-public record GitSettings(
+public record GitRequest(
         String uri,
         String base,
         String username,
@@ -15,7 +15,7 @@ public record GitSettings(
         boolean pushToRemoteEnabled,
         boolean pullRequestEnabled) {
 
-    public GitSettings(
+    public GitRequest(
             String uri,
             String base,
             String username,
@@ -88,8 +88,8 @@ public record GitSettings(
             return this;
         }
 
-        public GitSettings build() {
-            return new GitSettings(uri, base, username, password, commit, filePaths, pushToRemoteEnabled, pullRequestEnabled);
+        public GitRequest build() {
+            return new GitRequest(uri, base, username, password, commit, filePaths, pushToRemoteEnabled, pullRequestEnabled);
         }
     }
 

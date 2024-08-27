@@ -20,18 +20,18 @@ public class GitlabPullRequestClient implements PullRequestClient {
     private static Logger log = LoggerFactory.getLogger(GitlabPullRequestClient.class);
 
     @Override
-    public void pr(Repository localRepository, GitSettings settings, String title, String body) {
-        if (settings.pushToRemoteEnabled() && settings.pullRequestEnabled()) {
+    public void pr(Repository localRepository, GitRequest request, String title, String body) {
+        if (request.pushToRemoteEnabled() && request.pullRequestEnabled()) {
             try {
-                GitLabApi gitLabApi = GitLabApi.oauth2Login(settings.uri(), settings.username(), settings.password());
+                GitLabApi gitLabApi = GitLabApi.oauth2Login(request.uri(), request.username(), request.password());
                 String projectId = determineGitlabProjectId(getRemoteUrl(localRepository));
                 MergeRequest mergeRequest = gitLabApi.getMergeRequestApi().createMergeRequest(
                     projectId,
                     localRepository.getBranch(),
-                    settings.base(),
+                    request.base(),
                     title,
                     body,
-                    getAssigneeIdFromUsername(gitLabApi, settings.username())
+                    getAssigneeIdFromUsername(gitLabApi, request.username())
                 );
                 log.info("Merge request created: {}", mergeRequest.getWebUrl());
             } catch (GitLabApiException | URISyntaxException | IOException e) {

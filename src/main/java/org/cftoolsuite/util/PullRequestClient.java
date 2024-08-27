@@ -9,7 +9,7 @@ import org.eclipse.jgit.transport.URIish;
 
 public interface PullRequestClient {
 
-    void pr(Repository repo, GitSettings settings, String title, String body);
+    void pr(Repository repo, GitRequest request, String title, String body);
 
     String uriPrefix();
 

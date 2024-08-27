@@ -23,12 +23,12 @@ public class BitBucketPullRequestClient implements PullRequestClient {
     private static Logger log = LoggerFactory.getLogger(BitBucketPullRequestClient.class);
 
     @Override
-    public void pr(Repository localRepository, GitSettings settings, String title, String body) {
-        if (settings.pushToRemoteEnabled() && settings.pullRequestEnabled()) {
+    public void pr(Repository localRepository, GitRequest request, String title, String body) {
+        if (request.pushToRemoteEnabled() && request.pullRequestEnabled()) {
             try {
-                String bitbucketUrl = settings.uri();
-                String username = settings.username();
-                String password = settings.password();
+                String bitbucketUrl = request.uri();
+                String username = request.username();
+                String password = request.password();
 
                 BitbucketApi bitbucketApi = BitbucketClient.builder()
                     .endPoint(bitbucketUrl)
@@ -52,11 +52,11 @@ public class BitBucketPullRequestClient implements PullRequestClient {
                 );
 
                 Reference toRef = Reference.create(
-                    "refs/heads/" + settings.base(),
+                    "refs/heads/" + request.base(),
                     repository,
                     null,  // state
                     false,  // not a tag
-                    settings.base(),  // displayId
+                    request.base(),  // displayId
                     null  // latestCommit
                 );
 

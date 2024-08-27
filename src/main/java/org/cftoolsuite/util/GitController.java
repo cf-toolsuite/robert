@@ -40,8 +40,8 @@ public class GitController {
     }
 
     @PostMapping("/clone")
-    public void clone(@RequestBody GitSettings settings) {
-        Repository repo = gitClient.getRepository(settings);
+    public void clone(@RequestBody GitRequest request) {
+        Repository repo = gitClient.getRepository(request);
         try {
             gitClient.getLatestCommit(repo);
         } catch (GitAPIException | IOException e) {
@@ -50,15 +50,15 @@ public class GitController {
     }
 
     @PostMapping("/refactor")
-    public void refactor(@RequestBody GitSettings settings, @Value("#{systemProperties['tpmDelay'] ?: '5'}") String delay) {
-        Repository repo = gitClient.getRepository(settings);
+    public void refactor(@RequestBody GitRequest request, @Value("#{systemProperties['tpmDelay'] ?: '5'}") String delay) {
+        Repository repo = gitClient.getRepository(request);
         try {
             Map<String, String> sourceMap = null;
             Map<String, String> targetMap = new HashMap<>();
-            if (StringUtils.isNotBlank(settings.commit())) {
-                sourceMap = gitClient.readFiles(repo, settings.filePaths(), settings.commit());
+            if (StringUtils.isNotBlank(request.commit())) {
+                sourceMap = gitClient.readFiles(repo, request.filePaths(), request.commit());
             } else {
-                sourceMap = gitClient.readFiles(repo, settings.filePaths());
+                sourceMap = gitClient.readFiles(repo, request.filePaths());
             }
             log.info("Found {} files to refactor.", sourceMap.size());
             ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
@@ -79,8 +79,8 @@ public class GitController {
             String commitMessage = String.format("Refactored by %s on %s", refactoringService.getClass().getName(), LocalDateTime.now().format(formatter));
             gitClient.writeFiles(repo, targetMap, branchName, commitMessage);
             log.info("Refactoring completed on {}.", branchName);
-            gitClient.push(settings, repo, branchName);
-            pullRequestClientFactory.get(settings.uri()).pr(repo, settings, branchName, commitMessage);
+            gitClient.push(request, repo, branchName);
+            pullRequestClientFactory.get(request.uri()).pr(repo, request, branchName, commitMessage);
         } catch (GitAPIException | IOException | InterruptedException e) {
             log.error("Trouble cloning Git repository", e);
         }
