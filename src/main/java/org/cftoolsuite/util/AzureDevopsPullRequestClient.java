@@ -20,7 +20,8 @@ public class AzureDevopsPullRequestClient implements PullRequestClient {
     private static Logger log = LoggerFactory.getLogger(AzureDevopsPullRequestClient.class);
 
     @Override
-    public void pr(Repository localRepository, GitRequest request, String title, String body) {
+    public String pr(Repository localRepository, GitRequest request, String title, String body) {
+        String result = null;
         if (request.pushToRemoteEnabled() && request.pullRequestEnabled()) {
             try {
                 String organizationUrl = extractOrganizationUrl(request.uri());
@@ -47,13 +48,15 @@ public class AzureDevopsPullRequestClient implements PullRequestClient {
                     null  // No reviewers specified
                 );
 
-                log.info("Pull request created: {}", createdPR.getUrl());
+                result = createdPR.getUrl();
+                log.info("Pull request created: {}", result);
             } catch (AzDException | IOException | URISyntaxException e) {
                 throw new RuntimeException("Failed to create pull request", e);
             }
         } else {
             log.info("Pull request not enabled!");
         }
+        return result;
     }
 
     private String extractOrganizationUrl(String uri) throws URISyntaxException {

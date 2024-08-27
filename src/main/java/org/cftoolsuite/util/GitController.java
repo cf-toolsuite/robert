@@ -16,6 +16,7 @@ import org.eclipse.jgit.lib.Repository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -50,7 +51,7 @@ public class GitController {
     }
 
     @PostMapping("/refactor")
-    public void refactor(@RequestBody GitRequest request, @Value("#{systemProperties['tpmDelay'] ?: '5'}") String delay) {
+    public ResponseEntity<GitResponse> refactor(@RequestBody GitRequest request, @Value("#{systemProperties['tpmDelay'] ?: '5'}") String delay) {
         Repository repo = gitClient.getRepository(request);
         try {
             Map<String, String> sourceMap = null;
@@ -80,9 +81,11 @@ public class GitController {
             gitClient.writeFiles(repo, targetMap, branchName, commitMessage);
             log.info("Refactoring completed on {}.", branchName);
             gitClient.push(request, repo, branchName);
-            pullRequestClientFactory.get(request.uri()).pr(repo, request, branchName, commitMessage);
+            String pullRequestUrl = pullRequestClientFactory.get(request.uri()).pr(repo, request, branchName, commitMessage);
+            return ResponseEntity.ok(new GitResponse(request.uri(), branchName, pullRequestUrl, targetMap.keySet()));
         } catch (GitAPIException | IOException | InterruptedException e) {
-            log.error("Trouble cloning Git repository", e);
+            log.error("Trouble processing refactor request for Git repository", e);
+            return ResponseEntity.unprocessableEntity().body(GitResponse.noneFor(request.uri()));
         }
     }
 

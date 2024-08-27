@@ -20,7 +20,8 @@ public class GitlabPullRequestClient implements PullRequestClient {
     private static Logger log = LoggerFactory.getLogger(GitlabPullRequestClient.class);
 
     @Override
-    public void pr(Repository localRepository, GitRequest request, String title, String body) {
+    public String pr(Repository localRepository, GitRequest request, String title, String body) {
+        String result = null;
         if (request.pushToRemoteEnabled() && request.pullRequestEnabled()) {
             try {
                 GitLabApi gitLabApi = GitLabApi.oauth2Login(request.uri(), request.username(), request.password());
@@ -33,13 +34,15 @@ public class GitlabPullRequestClient implements PullRequestClient {
                     body,
                     getAssigneeIdFromUsername(gitLabApi, request.username())
                 );
-                log.info("Merge request created: {}", mergeRequest.getWebUrl());
+                result = mergeRequest.getWebUrl().toString();
+                log.info("Merge request created: {}", result);
             } catch (GitLabApiException | URISyntaxException | IOException e) {
                 throw new RuntimeException("Failed to create merge request", e);
             }
         } else {
             log.info("Merge request not enabled!");
         }
+        return result;
     }
 
     private String determineGitlabProjectId(String remoteUrl) {

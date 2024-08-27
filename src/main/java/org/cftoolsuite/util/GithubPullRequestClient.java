@@ -18,7 +18,8 @@ public class GithubPullRequestClient implements PullRequestClient {
     private static Logger log = LoggerFactory.getLogger(GithubPullRequestClient.class);
 
     @Override
-    public void pr(Repository localRepository, GitRequest request, String title, String body) {
+    public String pr(Repository localRepository, GitRequest request, String title, String body) {
+        String result = null;
         if (request.pushToRemoteEnabled() && request.pullRequestEnabled()) {
             try {
                 GitHub github = new GitHubBuilder().withPassword(request.username(), request.password()).build();
@@ -29,13 +30,15 @@ public class GithubPullRequestClient implements PullRequestClient {
                     request.base(),
                     body
                 );
-                log.info("Pull request created: {}", pullRequest.getHtmlUrl());
+                result = pullRequest.getHtmlUrl().toString();
+                log.info("Pull request created: {}", result);
             } catch (IOException | URISyntaxException e) {
                 throw new RuntimeException("Failed to create pull request", e);
             }
         } else {
             log.info("Pull request not enabled!");
         }
+        return result;
     }
 
     private GHRepository determineGithubRepository(GitHub github, String remoteUrl) throws IOException {

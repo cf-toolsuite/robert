@@ -23,7 +23,8 @@ public class BitBucketPullRequestClient implements PullRequestClient {
     private static Logger log = LoggerFactory.getLogger(BitBucketPullRequestClient.class);
 
     @Override
-    public void pr(Repository localRepository, GitRequest request, String title, String body) {
+    public String pr(Repository localRepository, GitRequest request, String title, String body) {
+        String result = null;
         if (request.pushToRemoteEnabled() && request.pullRequestEnabled()) {
             try {
                 String bitbucketUrl = request.uri();
@@ -72,7 +73,8 @@ public class BitBucketPullRequestClient implements PullRequestClient {
                 PullRequest pullRequest = bitbucketApi.pullRequestApi().create(projectKey, repoSlug, createPR);
 
                 if (pullRequest != null) {
-                    log.info("Pull request created: {}", pullRequest.links().self());
+                    result = pullRequest.links().self().toString();
+                    log.info("Pull request created: {}", result);
                 } else {
                     log.error("Failed to create pull request");
                 }
@@ -82,6 +84,7 @@ public class BitBucketPullRequestClient implements PullRequestClient {
         } else {
             log.info("Pull request not enabled!");
         }
+        return result;
     }
 
     private String[] determineProjectInfo(String remoteUrl) {
