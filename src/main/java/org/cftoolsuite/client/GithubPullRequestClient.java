@@ -1,8 +1,9 @@
-package org.cftoolsuite.util;
+package org.cftoolsuite.client;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
 
+import org.cftoolsuite.domain.GitRequest;
 import org.eclipse.jgit.lib.Repository;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRepository;

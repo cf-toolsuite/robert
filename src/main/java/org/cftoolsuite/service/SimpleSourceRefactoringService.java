@@ -1,4 +1,4 @@
-package org.cftoolsuite.util;
+package org.cftoolsuite.service;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;

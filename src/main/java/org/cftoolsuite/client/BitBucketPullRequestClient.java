@@ -1,9 +1,10 @@
-package org.cftoolsuite.util;
+package org.cftoolsuite.client;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Collections;
 
+import org.cftoolsuite.domain.GitRequest;
 import org.eclipse.jgit.lib.Repository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,4 +1,4 @@
-package org.cftoolsuite.util;
+package org.cftoolsuite.client;
 
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.stereotype.Component;

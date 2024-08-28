@@ -1,4 +1,4 @@
-package org.cftoolsuite.util;
+package org.cftoolsuite.controller;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -11,6 +11,11 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
+import org.cftoolsuite.client.GitClient;
+import org.cftoolsuite.client.PullRequestClientFactory;
+import org.cftoolsuite.domain.GitRequest;
+import org.cftoolsuite.domain.GitResponse;
+import org.cftoolsuite.service.RefactoringService;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
 import org.slf4j.Logger;

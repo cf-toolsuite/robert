@@ -51,7 +51,7 @@ You may want to override the default, built-in refactoring prompt.  To do that m
 or if you have a sophisticated multi-line prompt you might want to read in the contents this way
 
 ```bash
--Dprompt="$(cat samples/refactor-lombok-slf4j.prompt)"
+-Dprompt="$(cat samples/refactor-lombok-slf4j.st)"
 ```
 > You are certainly free to author your own prompt files, just replace the path above with your own
 

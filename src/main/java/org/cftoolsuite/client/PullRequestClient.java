@@ -1,8 +1,9 @@
-package org.cftoolsuite.util;
+package org.cftoolsuite.client;
 
 import java.net.URISyntaxException;
 import java.util.List;
 
+import org.cftoolsuite.domain.GitRequest;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
