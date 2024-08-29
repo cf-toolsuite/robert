@@ -1,8 +1,7 @@
 package org.cftoolsuite.controller;
 
-import java.io.IOException;
-
 import org.cftoolsuite.client.GitClient;
+import org.cftoolsuite.client.GitOperationException;
 import org.cftoolsuite.domain.GitRequest;
 import org.cftoolsuite.domain.GitResponse;
 import org.cftoolsuite.service.RefactoringService;
@@ -14,18 +13,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-
 @RestController
 public class GitController {
 
     private static final Logger log = LoggerFactory.getLogger(GitController.class);
 
-    private GitClient gitClient;
-    private RefactoringService refactoringService;
+    private final GitClient gitClient;
+    private final RefactoringService refactoringService;
 
-    public GitController(
-        GitClient gitClient,
-        RefactoringService refactoringService) {
+    public GitController(GitClient gitClient, RefactoringService refactoringService) {
         this.gitClient = gitClient;
         this.refactoringService = refactoringService;
     }
@@ -39,11 +35,11 @@ public class GitController {
     @PostMapping("/refactor")
     public ResponseEntity<GitResponse> refactor(@RequestBody GitRequest request) {
         try {
-            return ResponseEntity.ok(refactoringService.refactor(request));
-        } catch (IOException e) {
+            GitResponse response = refactoringService.apply(request);
+            return ResponseEntity.ok(response);
+        } catch (GitOperationException e) {
             log.error("Trouble processing refactor request for Git repository", e);
             return ResponseEntity.unprocessableEntity().body(GitResponse.noneFor(request.uri()));
         }
     }
-
 }

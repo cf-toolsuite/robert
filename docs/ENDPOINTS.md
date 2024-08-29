@@ -50,30 +50,42 @@ Clones and refactors source
 
 HTTP/1.1 200
 Connection: keep-alive
-Content-Length: 0
-Date: Sun, 18 Aug 2024 04:49:35 GMT
+Content-Type: application/json
+Date: Thu, 29 Aug 2024 18:43:02 GMT
 Keep-Alive: timeout=60
+Transfer-Encoding: chunked
+
+{
+    "branch": "refactor-a3b21c59-a5c2-4d62-a720-097a328dc894",
+    "impactedFileSet": [
+        "src/main/java/org/cftoolsuite/cfapp/domain/accounting/application/AppUsageMonthly.java",
+        "src/main/java/org/cftoolsuite/cfapp/domain/accounting/application/AppUsageYearly.java",
+        "src/main/java/org/cftoolsuite/cfapp/domain/accounting/application/AppUsageReport.java"
+    ],
+    "pullRequestUrl": null,
+    "uri": "https://github.com/cf-toolsuite/cf-butler.git"
+}
 ```
 
 #### Sample log output
 
 ```bash
-21:49:22.783 [main] INFO  org.cftoolsuite.RobertApplication - Started RobertApplication in 1.911 seconds (process running for 2.158)
-21:49:28.657 [http-nio-8080-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
-21:49:28.658 [http-nio-8080-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
-21:49:28.659 [http-nio-8080-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 0 ms
-21:49:30.796 [http-nio-8080-exec-1] INFO  org.cftoolsuite.util.GitClient - Cloned Repository[/home/cphillipson/Documents/development/pivotal/cf/robert/tmp/cf-butler/.git]
-21:49:30.801 [http-nio-8080-exec-1] INFO  org.cftoolsuite.util.GitClient - Latest commit with id a5ea2b36a5fe094925337a5fe5f259ca9dd4313e was made Fri Aug 16 19:39:26 PDT 2024 on Merge branch 'main' of https://github.com/cf-toolsuite/cf-butler by Chris Phillipson
-21:49:30.802 [http-nio-8080-exec-1] INFO  org.cftoolsuite.util.GitClient - -- Obtaining contents of src/main/java/org/cftoolsuite/cfapp/domain/accounting/application/AppUsageMonthly.java
-21:49:30.802 [http-nio-8080-exec-1] INFO  org.cftoolsuite.util.GitClient - -- Obtaining contents of src/main/java/org/cftoolsuite/cfapp/domain/accounting/application/AppUsageReport.java
-21:49:30.802 [http-nio-8080-exec-1] INFO  org.cftoolsuite.util.GitClient - -- Obtaining contents of src/main/java/org/cftoolsuite/cfapp/domain/accounting/application/AppUsageYearly.java
-21:49:30.803 [http-nio-8080-exec-1] INFO  org.cftoolsuite.util.GitController - Found 3 files to refactor.
-21:49:30.803 [http-nio-8080-exec-1] INFO  org.cftoolsuite.util.GitController - -- Attempting to refactor src/main/java/org/cftoolsuite/cfapp/domain/accounting/application/AppUsageMonthly.java
-21:49:32.798 [http-nio-8080-exec-1] INFO  org.cftoolsuite.util.GitController - -- Attempting to refactor src/main/java/org/cftoolsuite/cfapp/domain/accounting/application/AppUsageYearly.java
-21:49:34.195 [http-nio-8080-exec-1] INFO  org.cftoolsuite.util.GitController - -- Attempting to refactor src/main/java/org/cftoolsuite/cfapp/domain/accounting/application/AppUsageReport.java
-21:49:35.359 [http-nio-8080-exec-1] INFO  org.cftoolsuite.util.GitController - Refactoring completed on refactor-647ee41c-8ff1-4c40-bfcb-2e5567193850.
-21:49:35.360 [http-nio-8080-exec-1] INFO  org.cftoolsuite.util.GitClient - Push to remote not enabled!
-...
+11:40:01.323 [main] INFO  org.cftoolsuite.RobertApplication - Started RobertApplication in 2.62 seconds (process running for 2.888)
+11:41:15.196 [tomcat-handler-0] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+11:41:15.196 [tomcat-handler-0] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+11:41:15.198 [tomcat-handler-0] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+11:42:51.285 [tomcat-handler-2] INFO  org.cftoolsuite.client.GitClient - Cloned Repository[/home/cphillipson/Documents/development/pivotal/cf/robert/tmp/cf-butler/.git]
+11:42:51.287 [tomcat-handler-2] INFO  org.cftoolsuite.client.GitClient - Latest commit with id 6562b05bf171d482c303895ad5206e1fc7962cae was made Tue Aug 27 08:02:12 PDT 2024 on Upgrade bcprov-jdk18on to 1.78.1 by Chris Phillipson
+11:42:51.289 [tomcat-handler-2] INFO  org.cftoolsuite.client.GitClient - -- Obtaining contents of src/main/java/org/cftoolsuite/cfapp/domain/accounting/application/AppUsageMonthly.java
+11:42:51.289 [tomcat-handler-2] INFO  org.cftoolsuite.client.GitClient - -- Obtaining contents of src/main/java/org/cftoolsuite/cfapp/domain/accounting/application/AppUsageReport.java
+11:42:51.289 [tomcat-handler-2] INFO  org.cftoolsuite.client.GitClient - -- Obtaining contents of src/main/java/org/cftoolsuite/cfapp/domain/accounting/application/AppUsageYearly.java
+11:42:51.289 [tomcat-handler-2] INFO  o.c.s.SimpleSourceRefactoringService - Found 3 files to refactor.
+11:42:56.290 [pool-5-thread-1] INFO  o.c.s.SimpleSourceRefactoringService - -- Attempting to refactor src/main/java/org/cftoolsuite/cfapp/domain/accounting/application/AppUsageMonthly.java
+11:42:58.809 [pool-5-thread-1] INFO  o.c.s.SimpleSourceRefactoringService - -- Attempting to refactor src/main/java/org/cftoolsuite/cfapp/domain/accounting/application/AppUsageYearly.java
+11:43:01.026 [pool-5-thread-1] INFO  o.c.s.SimpleSourceRefactoringService - -- Attempting to refactor src/main/java/org/cftoolsuite/cfapp/domain/accounting/application/AppUsageReport.java
+11:43:02.898 [tomcat-handler-2] INFO  o.c.s.SimpleSourceRefactoringService - Refactoring completed on refactor-a3b21c59-a5c2-4d62-a720-097a328dc894.
+11:43:02.899 [tomcat-handler-2] INFO  org.cftoolsuite.client.GitClient - Push to remote not enabled!
+11:43:02.899 [tomcat-handler-2] INFO  o.c.client.GithubPullRequestClient - Pull request not enabled!
 ```
 
 #### Sample git log
@@ -81,18 +93,18 @@ Keep-Alive: timeout=60
 ```bash
 ❯ cd tmp/cf-butler
 ❯ git --no-pager log --max-count=2
-commit 0a4008ee85162580c9627eefe1eee0c7b9dc68d0 (HEAD -> refactor-647ee41c-8ff1-4c40-bfcb-2e5567193850)
+
+commit da12636481d5cc6b20f8b78e4220e71e93c9014b (HEAD -> refactor-a3b21c59-a5c2-4d62-a720-097a328dc894)
 Author: Chris Phillipson <cphillipson@pivotal.io>
-Date:   Sat Aug 17 21:49:35 2024 -0700
+Date:   Thu Aug 29 11:43:02 2024 -0700
 
-    Refactored by org.cftoolsuite.util.SimpleJavaSourceRefactoringService on 2024-08-17 21:49:35
+    Refactored by org.cftoolsuite.service.SimpleSourceRefactoringService on 2024-08-29 11:43:02
 
-commit a5ea2b36a5fe094925337a5fe5f259ca9dd4313e (origin/main, main)
-Merge: 0b3a283 6425425
+commit 6562b05bf171d482c303895ad5206e1fc7962cae (tag: 2024.08.27, origin/main, main)
 Author: Chris Phillipson <cphillipson@pivotal.io>
-Date:   Fri Aug 16 19:39:26 2024 -0700
+Date:   Tue Aug 27 08:02:12 2024 -0700
 
-    Merge branch 'main' of https://github.com/cf-toolsuite/cf-butler
+    Upgrade bcprov-jdk18on to 1.78.1
 ```
 
 #### Validating each refactor request

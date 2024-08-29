@@ -40,6 +40,14 @@ Open another terminal shell and execute
 
 ^ If you want to override the model being used you could add `-Dspring.ai.ollama.chat.options.model={model_name}` to the above and replace `{model_name}` with a supported model.
 
+### with Vector database
+
+Leverages Spring Boot's support for Docker Compose and launches an instance of Chroma for use by the VectorStore.  This mode activates Git repository ingestion and Document metadata enrichment for Java source files found.  It also activates the DependencyAwareRefactoringService.
+
+```bash
+./gradlew build bootRun -Dspring.profiles.active=advanced -Pstore=chroma
+```
+
 ### with alternate prompt
 
 You may want to override the default, built-in refactoring prompt.  To do that make sure the text of your new prompt contains a `{source}` placeholder, then append, e.g.,

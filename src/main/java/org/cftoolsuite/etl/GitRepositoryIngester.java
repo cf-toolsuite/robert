@@ -13,9 +13,7 @@ import org.springframework.ai.document.Document;
 import org.springframework.ai.document.DocumentTransformer;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.ListableBeanFactory;
-import org.springframework.stereotype.Service;
 
-@Service
 public class GitRepositoryIngester {
 
     private VectorStore store;

@@ -32,6 +32,10 @@ dependencies {
 	if (project.hasProperty('profile') && project.getProperty('profile') == 'ollama') {
 		implementation 'org.springframework.ai:spring-ai-ollama-spring-boot-starter'
 	}
+	if (project.hasProperty('store') && project.getProperty('store') == 'chroma') {
+		implementation 'org.springframework.ai:spring-ai-chroma-store-spring-boot-starter'
+		runtimeOnly 'org.springframework.boot:spring-boot-docker-compose'
+	}
 	implementation 'org.apache.commons:commons-lang3'
 	implementation 'org.eclipse.jgit:org.eclipse.jgit:6.10.0.202406032230-r'
 	implementation 'org.kohsuke:github-api:1.324'

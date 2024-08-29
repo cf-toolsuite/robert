@@ -8,5 +8,4 @@ These tools are great for upgrading the dependencies your applications rely on. 
 
 Subscription offerings like: [Github Copilot](https://docs.github.com/en/copilot/quickstart), [Codeium](https://codeium.com/), [Tabnine](https://docs.tabnine.com/main), [Amazon Q Developer](https://aws.amazon.com/q/developer/), [Gemini CodeAssist (Google Cloud)](https://cloud.google.com/gemini/docs/codeassist/overview) are also worth considering.
 
-R*bert taps into the corpus of knowledge continuing to evolve in LLMs and employs carefully constructed prompts to refactor slices of source code.  
- 
+R*bert taps into the corpus of knowledge continuing to evolve in LLMs and employs carefully constructed prompts to refactor slices of source code.
