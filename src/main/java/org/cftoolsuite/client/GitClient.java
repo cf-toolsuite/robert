@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
 
 
 @Component
@@ -76,13 +77,21 @@ public class GitClient {
             result = Git.open(directory).getRepository();
             log.info("Cloned {}", result.toString());
         } catch (GitAPIException | IOException e) {
-            log.warn(String.format("Cannot clone Git repository at %s", uri), e);
+            throw new GitOperationException(String.format("Could not clone Git repository at %s", uri), e);
+        }
+        return result;
+    }
+
+    public String getOrigin(Repository repo) throws IOException {
+        String result = null;
+        try (Git git = new Git(repo)) {
+            result = git.getRepository().getConfig().getString("remote", "origin", "url");
         }
         return result;
     }
 
     // @see https://stackoverflow.com/questions/42820282/get-the-latest-commit-in-a-repository-with-jgit
-    public RevCommit getLatestCommit(Repository repo) throws IOException, GitAPIException {
+    public RevCommit getLatestCommit(Repository repo) {
         RevCommit latestCommit = null;
         try (
             Git git = new Git(repo);
@@ -95,7 +104,7 @@ public class GitClient {
                     try {
                         return walk.parseCommit(branch.getObjectId());
                     } catch (IOException e) {
-                        throw new RuntimeException(e);
+                        throw new GitOperationException("Trouble determining latest commit", e);
                     }
                 })
                 .sorted(Comparator.comparing((RevCommit commit) -> commit.getAuthorIdent().getWhen()).reversed())
@@ -106,6 +115,8 @@ public class GitClient {
                 log.info("Latest commit with id {} was made {} on {} by {}", latestCommit.getId().name(), latestCommit.getAuthorIdent().getWhen(),
                         latestCommit.getShortMessage(), latestCommit.getAuthorIdent().getName());
             }
+        } catch (GitAPIException e) {
+            throw new GitOperationException("Trouble obtaining list of branches", e);
         }
         return latestCommit;
     }
@@ -118,6 +129,7 @@ public class GitClient {
             if (treeWalk != null) {
                 byte[] bytes = repo.open(treeWalk.getObjectId(0)).getBytes();
                 String path = treeWalk.getPathString();
+                log.info("-- Obtaining contents of {}", path);
                 String contents = new String(bytes, StandardCharsets.UTF_8);
                 result.put(path, contents);
                 return result;
@@ -127,22 +139,36 @@ public class GitClient {
         }
     }
 
-    public Map<String,String> readFiles(Repository repo, Set<String> paths, String... commits) throws IOException, GitAPIException {
+    public Map<String, String> readFiles(Repository repo, Set<String> paths, String... commits) throws IOException {
         Map<String, String> result = new HashMap<>();
+        // Determine the commit to use
         String commitToUse = (commits.length > 0) ? commits[0] : getLatestCommit(repo).name();
-        for (String path: paths) {
-            if (!path.contains("/") && path.contains(".")) {
-                result.putAll(readFilesFromPackages(repo, Set.of(path), commitToUse));
-            } else if (path.contains("/")) {
-                result.putAll(readFile(repo, path, commitToUse));
-            } else {
-                log.warn("{} is not a valid path!  Skipping.", path);
+        // Resolve the commit object
+        ObjectId commitId = repo.resolve(commitToUse);
+        RevCommit revision = repo.parseCommit(commitId);
+        if (CollectionUtils.isEmpty(paths)) {
+            try (TreeWalk treeWalk = new TreeWalk(repo)) {
+                treeWalk.addTree(revision.getTree());
+                treeWalk.setRecursive(true);
+                while (treeWalk.next()) {
+                    result.putAll(readFile(repo,treeWalk.getPathString(), commitToUse));
+                }
+            }
+        } else {
+            for (String path: paths) {
+                if (!path.contains("/") && path.contains(".")) {
+                    result.putAll(readFilesFromPackages(repo, Set.of(path), commitToUse));
+                } else if (path.contains("/")) {
+                    result.putAll(readFile(repo, path, commitToUse));
+                } else {
+                    log.warn("{} is not a valid path!  Skipping.", path);
+                }
             }
         }
         return result;
     }
 
-    public Map<String, String> readFilesFromPackages(Repository repo, Set<String> packageNames, String... commits) throws IOException, GitAPIException {
+    public Map<String, String> readFilesFromPackages(Repository repo, Set<String> packageNames, String... commits) throws IOException {
         Map<String, String> result = new HashMap<>();
         // Determine the commit to use
         String commitToUse = (commits.length > 0) ? commits[0] : getLatestCommit(repo).name();
@@ -174,7 +200,7 @@ public class GitClient {
         return result;
     }
 
-    public void writeFile(Repository repo, String filePath, String contents, String branch) throws IOException, GitAPIException {
+    public void writeFile(Repository repo, String filePath, String contents, String branch) {
         try (Git git = new Git(repo)) {
             // Check if the branch exists
             boolean branchExists = repo.findRef(branch) != null;
@@ -192,11 +218,11 @@ public class GitClient {
             git.add().addFilepattern(filePath).call();
             // Removed the commit call from here
         } catch (IOException | GitAPIException e) {
-            throw new IOException("Failed to write file to branch: " + branch, e);
+            throw new GitOperationException("Failed to write file to branch: " + branch, e);
         }
     }
 
-    public void writeFiles(Repository repo, Map<String, String> sourceMap, String branch, String commitMessage) throws IOException, GitAPIException {
+    public void writeFiles(Repository repo, Map<String, String> sourceMap, String branch, String commitMessage) {
         try (Git git = new Git(repo)) {
             // Iterate over the sourceMap and write each file
             for (Map.Entry<String, String> entry : sourceMap.entrySet()) {
@@ -208,8 +234,8 @@ public class GitClient {
             if (StringUtils.isNotBlank(commitMessage)) {
                 git.commit().setMessage(commitMessage).call();
             }
-        } catch (IOException | GitAPIException e) {
-            throw new IOException("Failed to write files and commit to branch: " + branch, e);
+        } catch (GitAPIException e) {
+            throw new GitOperationException("Failed to write files and commit to branch: " + branch, e);
         }
     }
 
@@ -227,7 +253,7 @@ public class GitClient {
                 log.info("Push to remote not enabled!");
             }
         } catch (GitAPIException e) {
-            throw new RuntimeException(String.format("Failed to push to remote [%s]", branch), e);
+            throw new GitOperationException(String.format("Failed to push to remote [%s]", branch), e);
         }
     }
 }
