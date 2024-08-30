@@ -42,4 +42,5 @@ out/
 ### Miscellaneous ###
 tmp/
 config/
+!src/main/java/org/cftoolsuite/config/
 logs/
