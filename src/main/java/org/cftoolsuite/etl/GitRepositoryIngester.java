@@ -29,7 +29,7 @@ public class GitRepositoryIngester {
         this.beanFactory = beanFactory;
     }
 
-    public void ingest(Repository repository, String... commit) throws IOException {
+    public void ingest(Repository repository, String commit) throws IOException {
         Map<String, String> fileMap = client.readFiles(repository, null, commit);
         String origin = client.getOrigin(repository);
         List<Document> documents =

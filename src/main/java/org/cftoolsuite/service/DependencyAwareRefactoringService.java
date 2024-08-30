@@ -3,16 +3,11 @@ package org.cftoolsuite.service;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
 import org.cftoolsuite.client.GitClient;
 import org.cftoolsuite.client.GitOperationException;
 import org.cftoolsuite.client.PullRequestClientFactory;
@@ -24,11 +19,13 @@ import org.eclipse.jgit.lib.Repository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.client.advisor.QuestionAnswerAdvisor;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.ai.vectorstore.filter.Filter;
+import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.util.CollectionUtils;
 
 public class DependencyAwareRefactoringService implements RefactoringService {
 
@@ -43,7 +40,7 @@ public class DependencyAwareRefactoringService implements RefactoringService {
     private final VectorStore store;
 
     public DependencyAwareRefactoringService(
-        ChatClient.Builder clientBuilder,
+        ChatClient chatClient,
         String seek,
         String prompt,
         GitClient gitClient,
@@ -51,7 +48,7 @@ public class DependencyAwareRefactoringService implements RefactoringService {
         GitRepositoryIngester ingester,
         VectorStore store
     ) {
-        this.chatClient = clientBuilder.build();
+        this.chatClient = chatClient;
         this.seek = seek;
         this.prompt = prompt;
         this.gitClient = gitClient;
@@ -73,9 +70,9 @@ public class DependencyAwareRefactoringService implements RefactoringService {
         Repository repo = gitClient.getRepository(request);
         ingester.ingest(repo, request.commit());
 
-        // TODO How do I further refine the search below using filePaths (or packageNames) along with the metadata available from the vector store?
-        List<Document> candidates = store
-            .similaritySearch(SearchRequest.query(seek).withTopK(100));
+        List<Document> candidates = CollectionUtils.isEmpty(request.filePaths()) ?
+            store.similaritySearch(SearchRequest.query(seek).withTopK(100)) :
+            store.similaritySearch(SearchRequest.query(seek).withFilterExpression(assembleFilterExpression(request)).withTopK(100));
 
         List<RefactoredSource> refactoredSources = refactor(candidates);
         Map<String, String> targetMap =
@@ -107,5 +104,23 @@ public class DependencyAwareRefactoringService implements RefactoringService {
             .param("documents", documents))
             .call()
             .entity(new ParameterizedTypeReference<List<RefactoredSource>>() {});
+    }
+
+    private Filter.Expression assembleFilterExpression(GitRequest request) {
+        FilterExpressionBuilder b = new FilterExpressionBuilder();
+        Filter.Expression result = null;
+        if (!CollectionUtils.isEmpty(request.filePaths())) {
+            List<String> slashSeparatedPaths = request.filePaths().stream()
+                .filter(path -> path.contains("/") && !path.contains("."))
+                .collect(Collectors.toList());
+
+            List<String> convertedPackageNames = request.filePaths().stream()
+                .filter(path -> path.contains(".") && !path.contains("/"))
+                .map(pkg -> "src/main/java/" + pkg.replace('.', '/'))
+                .collect(Collectors.toList());
+
+            result = b.or(b.in("source", slashSeparatedPaths), b.in("source", convertedPackageNames)).build();
+        }
+        return result;
     }
 }

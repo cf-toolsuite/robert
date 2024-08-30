@@ -28,7 +28,7 @@ public record GitRequest(
         this.base = StringUtils.isNotBlank(base) ? base : "main";
         this.username = username;
         this.password = (password != null) ? password : "";
-        this.commit = commit;
+        this.commit = (commit != null) ? commit : "";
         this.filePaths = (filePaths != null) ? filePaths : new HashSet<>();
         this.pushToRemoteEnabled = pushToRemoteEnabled;
         this.pullRequestEnabled = pullRequestEnabled;

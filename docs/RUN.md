@@ -45,8 +45,9 @@ Open another terminal shell and execute
 Leverages Spring Boot's support for Docker Compose and launches an instance of Chroma for use by the VectorStore.  This mode activates Git repository ingestion and Document metadata enrichment for Java source files found.  It also activates the DependencyAwareRefactoringService.
 
 ```bash
-./gradlew build bootRun -Dspring.profiles.active=advanced -Pstore=chroma
+./gradlew build bootRun -Dspring.profiles.active=advanced,groq-cloud -Pstore=chroma
 ```
+> You also have the option of running with `ollama`.  A key thing to note is that you must activate both an LLM provider (i.e., `groq-cloud` or `ollama`) and the advanced Spring profiles.
 
 ### with alternate prompt
 

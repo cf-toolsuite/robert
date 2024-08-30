@@ -1,8 +1,11 @@
 package org.cftoolsuite.etl;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -37,19 +40,23 @@ public class JavaSourceMetadataEnricher implements DocumentTransformer {
 	@Override
 	public List<Document> apply(List<Document> documents) {
 		try {
+            List<Document> enrichedDocuments = new ArrayList<>();
             for (Document document : documents) {
                 if (!CollectionUtils.isEmpty(document.getMetadata()) && document.getMetadata().containsKey("source")) {
                     if (( (String) document.getMetadata().get("source")).endsWith(".java")) {
                         log.info("-- Enriching Java source metadata for: {}", document.getMetadata().get("source"));
                         ObjectNode node = parse(document.getContent());
                         String[] jsonKeys = new String[] { "package", "imports", "type", "externalMethodCalls" };
+                        Map<String, Object> metadata = new HashMap<>();
                         for (String jsonKey: jsonKeys) {
-                            document.getMetadata().put(jsonKey, objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(node.get(jsonKey)));
+                            metadata.put(jsonKey, objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(node.get(jsonKey)));
                         }
+                        metadata.putAll(document.getMetadata());
+                        enrichedDocuments.add(new Document(document.getContent(), metadata));
                     }
                 }
             }
-            return documents;
+            return enrichedDocuments;
         } catch (Exception e) {
             throw new RuntimeException("Error while enriching Java source metadata", e);
         }

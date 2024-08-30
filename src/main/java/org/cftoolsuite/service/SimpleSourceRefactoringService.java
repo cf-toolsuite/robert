@@ -10,7 +10,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.lang3.StringUtils;
 import org.cftoolsuite.client.GitClient;
 import org.cftoolsuite.client.GitOperationException;
 import org.cftoolsuite.client.PullRequestClientFactory;
@@ -32,13 +31,13 @@ public class SimpleSourceRefactoringService implements RefactoringService {
     private final PullRequestClientFactory pullRequestClientFactory;
 
     public SimpleSourceRefactoringService(
-        ChatClient.Builder clientBuilder,
+        ChatClient chatClient,
         String prompt,
         GitClient gitClient,
         String tpmDelay,
         PullRequestClientFactory pullRequestClientFactory
     ) {
-        this.chatClient = clientBuilder.build();
+        this.chatClient = chatClient;
         this.prompt = prompt;
         this.gitClient = gitClient;
         this.tpmDelay = tpmDelay;
@@ -56,9 +55,7 @@ public class SimpleSourceRefactoringService implements RefactoringService {
 
     protected GitResponse refactor(GitRequest request, String delay) throws IOException {
         Repository repo = gitClient.getRepository(request);
-        Map<String, String> sourceMap = StringUtils.isNotBlank(request.commit()) ?
-            gitClient.readFiles(repo, request.filePaths(), request.commit()) :
-            gitClient.readFiles(repo, request.filePaths());
+        Map<String, String> sourceMap = gitClient.readFiles(repo, request.filePaths(), request.commit());
 
         log.info("Found {} files to refactor.", sourceMap.size());
         Map<String, String> targetMap = new HashMap<>();

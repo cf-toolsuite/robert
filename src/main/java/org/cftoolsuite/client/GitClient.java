@@ -139,10 +139,10 @@ public class GitClient {
         }
     }
 
-    public Map<String, String> readFiles(Repository repo, Set<String> paths, String... commits) throws IOException {
+    public Map<String, String> readFiles(Repository repo, Set<String> paths, String commit) throws IOException {
         Map<String, String> result = new HashMap<>();
         // Determine the commit to use
-        String commitToUse = (commits.length > 0) ? commits[0] : getLatestCommit(repo).name();
+        String commitToUse = StringUtils.isNotBlank(commit) ? commit : getLatestCommit(repo).name();
         // Resolve the commit object
         ObjectId commitId = repo.resolve(commitToUse);
         RevCommit revision = repo.parseCommit(commitId);
@@ -168,10 +168,10 @@ public class GitClient {
         return result;
     }
 
-    public Map<String, String> readFilesFromPackages(Repository repo, Set<String> packageNames, String... commits) throws IOException {
+    public Map<String, String> readFilesFromPackages(Repository repo, Set<String> packageNames, String commit) throws IOException {
         Map<String, String> result = new HashMap<>();
         // Determine the commit to use
-        String commitToUse = (commits.length > 0) ? commits[0] : getLatestCommit(repo).name();
+        String commitToUse = StringUtils.isNotBlank(commit) ? commit : getLatestCommit(repo).name();
         // Resolve the commit object
         ObjectId commitId = repo.resolve(commitToUse);
         RevCommit revision = repo.parseCommit(commitId);
