@@ -7,14 +7,17 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.cftoolsuite.client.GitClient;
-import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.document.DocumentTransformer;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.ListableBeanFactory;
 
 public class GitRepositoryIngester {
+
+    private static final Logger log = LoggerFactory.getLogger(GitRepositoryIngester.class);
 
     private VectorStore store;
     private GitClient client;
@@ -26,7 +29,7 @@ public class GitRepositoryIngester {
         this.beanFactory = beanFactory;
     }
 
-    public void ingest(Repository repository, String... commit) throws IOException, GitAPIException {
+    public void ingest(Repository repository, String... commit) throws IOException {
         Map<String, String> fileMap = client.readFiles(repository, null, commit);
         String origin = client.getOrigin(repository);
         List<Document> documents =
@@ -34,6 +37,7 @@ public class GitRepositoryIngester {
                 .entrySet()
                     .stream()
                         .map(entry -> {
+                            log.info("-- Ingesting file: {}", entry.getKey());
                             Map<String, Object> customMetadata = Map.of("source", entry.getKey(), "charset", StandardCharsets.UTF_8, "origin", origin);
                             return new Document(entry.getValue(), customMetadata);
                         })

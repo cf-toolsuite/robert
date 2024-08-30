@@ -37,6 +37,7 @@ dependencies {
 		runtimeOnly 'org.springframework.boot:spring-boot-docker-compose'
 	}
 	implementation 'org.apache.commons:commons-lang3'
+	implementation 'com.github.javaparser:javaparser-core-serialization:3.26.1'
 	implementation 'org.eclipse.jgit:org.eclipse.jgit:6.10.0.202406032230-r'
 	implementation 'org.kohsuke:github-api:1.324'
 	implementation 'org.gitlab4j:gitlab4j-api:5.6.0'
