@@ -9,6 +9,42 @@ spring:
     virtual:
       enabled: true
 
+  docker:
+    compose:
+      lifecycle-management: none
+
+management:
+  info:
+    build:
+      enabled: true
+    git:
+      mode: FULL
+    java:
+      enabled: true
+    os:
+      enabled: true
+  endpoint:
+    health:
+      show-details: ALWAYS
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+    env:
+      enabled: true
+      show-values: ALWAYS
+    configprops:
+      enabled: true
+      show-values: ALWAYS
+  endpoints:
+    web:
+      exposure:
+        #include: info,health,metrics,scheduledtasks,loggers,prometheus,sbom
+        include: configprops,env,info,health,metrics,scheduledtasks,loggers,prometheus,sbom
+  tracing:
+    sampling:
+      probability: 1.0
+
 ---
 
 spring:
@@ -18,12 +54,12 @@ spring:
     import: "optional:file:./config/creds.yml"
 
   ai:
-      openai:
-        base_url: https://api.groq.com/openai
-        chat:
-          options:
-            model: llama-3.1-70b-versatile
-            temperature: 0.5
+    openai:
+      base_url: https://api.groq.com/openai
+      chat:
+        options:
+          model: llama-3.1-70b-versatile
+          temperature: 0.5
 
 ---
 
@@ -39,3 +75,65 @@ spring:
           model: llama3.1:70b
           top-k: 10
           top-p: 0.5
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: advanced
+
+  docker:
+    compose:
+      lifecycle-management: start-and-stop
+      stop:
+        command: down
+        arguments: -v
+      timeout: 1m
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: chroma
+
+  ai:
+    vectorstore:
+      chroma:
+        initialize-schema: true
+
+  docker:
+    compose:
+      file: ./docker-compose.chroma.yml
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: postgresml
+
+  datasource:
+    url: jdbc:postgresql://localhost:5433/postgresml
+    username: postgresml
+    password: ""
+
+  ai:
+    openai:
+      embedding:
+        enabled: false
+    vectorstore:
+      pgvector:
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+        dimensions: 1536
+    postgresml:
+      embedding:
+        options:
+          kwargs:
+            device: cpu
+
+  docker:
+    compose:
+      file: ./docker-compose.postgresml.yml

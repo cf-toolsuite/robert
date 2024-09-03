@@ -1,5 +1,16 @@
 # R*bert
 
+R*bert has two runtime modes of operation: `simple` and `advanced`, where the default mode is set to `simple`.
+
+The `advanced` mode requires you to activate:
+
+* a Gradle [project property](https://docs.gradle.org/current/userguide/migrating_from_maven.html#migmvn:profiles_and_properties) and
+* Spring Boot [profiles](https://docs.spring.io/spring-boot/reference/features/profiles.html)
+
+in order to package the appropriate runtime libraries in order to support a [VectorStore](https://docs.spring.io/spring-ai/reference/api/vectordbs.html#_available_implementations) and [EmbeddingModel](https://docs.spring.io/spring-ai/reference/api/embeddings.html#available-implementations).
+
+Both modes work with a [ChatModel](https://docs.spring.io/spring-ai/reference/api/chatmodel.html#_available_implementations).  Currently model support is plumbed for Open AI (including Groq) and Ollama.
+
 ## How to Run with Gradle
 
 ### with Groq Cloud
@@ -42,12 +53,33 @@ Open another terminal shell and execute
 
 ### with Vector database
 
-Leverages Spring Boot's support for Docker Compose and launches an instance of Chroma for use by the VectorStore.  This mode activates Git repository ingestion and Document metadata enrichment for Java source files found.  It also activates the DependencyAwareRefactoringService.
+This setup leverages Spring Boot's support for Docker Compose and launches either an instance of Chroma or PostgresML for use by the VectorStore.  This mode activates Git repository ingestion and Document metadata enrichment for Java source files found.  It also activates the [DependencyAwareRefactoringService](../src/main/java/org/cftoolsuite/service/DependencyAwareRefactoringService.java).
+
+#### Chroma
 
 ```bash
-./gradlew build bootRun -Dspring.profiles.active=advanced,groq-cloud -Pstore=chroma
+./gradlew build bootRun -Dspring.profiles.active=advanced,groq-cloud,chroma -Pstore=chroma
 ```
-> You also have the option of running with `ollama`.  A key thing to note is that you must activate both an LLM provider (i.e., `groq-cloud` or `ollama`) and the advanced Spring profiles.
+> You also have the option of running with `ollama`.
+
+
+#### PostgresML
+
+```bash
+./gradlew build bootRun -Dspring.profiles.active=advanced,groq-cloud,postgresml -Pstore=postgres
+```
+> You also have the option of running with `ollama`.
+
+A key thing to note is that **you must activate a combination** of Spring profiles:
+
+* `advanced`
+* an LLM provider (i.e., `groq-cloud` or `ollama`)
+* a store (i.e., `chroma` or `postgresml`)
+
+and a Gradle project property, either of:
+
+* `chroma`
+* `postgres`
 
 ### with alternate prompt
 
