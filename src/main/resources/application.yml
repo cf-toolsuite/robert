@@ -40,7 +40,6 @@ management:
     web:
       exposure:
         include: info,health,metrics,scheduledtasks,loggers,prometheus,sbom
-        #include: configprops,env,info,health,metrics,scheduledtasks,loggers,prometheus,sbom
   tracing:
     sampling:
       probability: 1.0
@@ -60,6 +59,9 @@ spring:
         options:
           model: llama-3.1-70b-versatile
           temperature: 0.8
+        observations:
+          include-prompt: true
+          include-completion: true
       embedding:
         options:
           model: text-embedding-3-large
@@ -170,3 +172,18 @@ spring:
   docker:
     compose:
       file: ./docker-compose.postgresml.yml
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+debug: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"

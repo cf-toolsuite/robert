@@ -7,13 +7,15 @@ The `advanced` mode requires you to activate:
 * a Gradle [project property](https://docs.gradle.org/current/userguide/migrating_from_maven.html#migmvn:profiles_and_properties) and
 * Spring Boot [profiles](https://docs.spring.io/spring-boot/reference/features/profiles.html)
 
-in order to package the appropriate runtime libraries in order to support a [VectorStore](https://docs.spring.io/spring-ai/reference/api/vectordbs.html#_available_implementations) and [EmbeddingModel](https://docs.spring.io/spring-ai/reference/api/embeddings.html#available-implementations).
+in order to package the appropriate runtime libraries and then appropriately configure runtime support a [VectorStore](https://docs.spring.io/spring-ai/reference/api/vectordbs.html#_available_implementations) and [EmbeddingModel](https://docs.spring.io/spring-ai/reference/api/embeddings.html#available-implementations).
 
 Both modes work with a [ChatModel](https://docs.spring.io/spring-ai/reference/api/chatmodel.html#_available_implementations).  Currently model support is plumbed for Open AI (including Groq) and Ollama.
 
 ## How to Run with Gradle
 
 ### with Groq Cloud
+
+Build and run a version of the utility that is compatible for use with [Groq Cloud](https://groq.com).  You will need to [obtain an API key](https://console.groq.com/docs/api-keys).
 
 Before launching the app:
 
@@ -45,7 +47,7 @@ ollama run llama3.1:70b
 Open another terminal shell and execute
 
 ```bash
-./gradlew bootRun -Dspring.profiles.active=ollama
+./gradlew build bootRun -Dspring.profiles.active=ollama -Pmodel-api-provider=ollama
 ```
 > You'll need to manually stop to the application with `Ctrl+C`
 
@@ -53,39 +55,33 @@ Open another terminal shell and execute
 
 ### with Vector database
 
-This setup leverages Spring Boot's support for Docker Compose and launches either an instance of Chroma, PgVector, or PostgresML for use by the VectorStore.  This mode activates Git repository ingestion and Document metadata enrichment for Java source files found.  It also activates the [DependencyAwareRefactoringService](../src/main/java/org/cftoolsuite/service/DependencyAwareRefactoringService.java).
+This setup leverages Spring Boot's support for Docker Compose and launches either an instance of Chroma or PgVector for use by the VectorStore.  This mode activates Git repository ingestion and Document metadata enrichment for Java source files found.  It also activates the [DependencyAwareRefactoringService](../src/main/java/org/cftoolsuite/service/DependencyAwareRefactoringService.java).
 
 #### Chroma
 
 ```bash
-./gradlew build bootRun -Dspring.profiles.active=advanced,groq-cloud,chroma -Pstore=chroma
+./gradlew build bootRun -Dspring.profiles.active=advanced,groq-cloud,chroma -Pvector-db-provider=chroma
 ```
-> You also have the option of building with `-Pprofile=ollama` then replacing `groq-cloud` in `-Dspring.profiles.active` with `ollama`.
+> You also have the option of building with `-Pmodel-api-provider=ollama` then replacing `groq-cloud` in `-Dspring.profiles.active` with `ollama`.
 
 #### PgVector
 
 ```bash
-./gradlew build bootRun -Dspring.profiles.active=advanced,groq-cloud,pgvector -Pstore=pgvector
+./gradlew build bootRun -Dspring.profiles.active=advanced,groq-cloud,pgvector -Pvector-db-provider=pgvector
 ```
-> You also have the option of building with `-Pprofile=ollama` then replacing `groq-cloud` in `-Dspring.profiles.active` with `ollama`.
+> You also have the option of building with `-Pmodel-api-provider=ollama` then replacing `groq-cloud` in `-Dspring.profiles.active` with `ollama`.
 
-#### PostgresML
 
-```bash
-./gradlew build bootRun -Dspring.profiles.active=advanced,groq-cloud,postgresml -Pstore=postgresml
-```
-> You also have the option of building with `-Pprofile=ollama` then replacing `groq-cloud` in `-Dspring.profiles.active` with `ollama`.
-
-A key thing to note is that **you must activate a combination** of Spring profiles:
+A key thing to note is that **you must activate a combination** of Spring profiles, like:
 
 * `advanced`
 * an LLM provider (i.e., `groq-cloud` or `ollama`)
-* a store (i.e., `chroma`, `pgvector`, or `postgresml`)
+* a Vector database provider (i.e., `chroma` or `pgvector`)
 
-and a Gradle project property, either of:
+and Gradle project properties, like:
 
-* `chroma`
-* `postgres`
+* `-Pmodel-api-provider=ollama`
+* `-Pvector-db-provider=chroma` or `-Pvector-db-provider=pgvector`
 
 ### with alternate prompt
 
