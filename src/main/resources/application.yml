@@ -39,8 +39,8 @@ management:
   endpoints:
     web:
       exposure:
-        #include: info,health,metrics,scheduledtasks,loggers,prometheus,sbom
-        include: configprops,env,info,health,metrics,scheduledtasks,loggers,prometheus,sbom
+        include: info,health,metrics,scheduledtasks,loggers,prometheus,sbom
+        #include: configprops,env,info,health,metrics,scheduledtasks,loggers,prometheus,sbom
   tracing:
     sampling:
       probability: 1.0
@@ -59,7 +59,10 @@ spring:
       chat:
         options:
           model: llama-3.1-70b-versatile
-          temperature: 0.5
+          temperature: 0.8
+      embedding:
+        options:
+          model: text-embedding-3-large
 
 ---
 
@@ -68,13 +71,17 @@ spring:
     activate:
       on-profile: ollama
 
+  autoconfigure:
+    exclude: org.springframework.ai.autoconfigure.openai.OpenAiAutoConfiguration
+
   ai:
+    openai:
+      embedding:
+        enabled: false
     ollama:
       chat:
         options:
-          model: llama3.1:70b
-          top-k: 10
-          top-p: 0.5
+          model: mistral
 
 ---
 

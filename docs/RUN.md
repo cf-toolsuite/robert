@@ -60,21 +60,21 @@ This setup leverages Spring Boot's support for Docker Compose and launches eithe
 ```bash
 ./gradlew build bootRun -Dspring.profiles.active=advanced,groq-cloud,chroma -Pstore=chroma
 ```
-> You also have the option of running with `ollama`.
+> You also have the option of building with `-Pprofile=ollama` then replacing `groq-cloud` in `-Dspring.profiles.active` with `ollama`.
 
 #### PgVector
 
 ```bash
 ./gradlew build bootRun -Dspring.profiles.active=advanced,groq-cloud,pgvector -Pstore=pgvector
 ```
-> You also have the option of running with `ollama`.
+> You also have the option of building with `-Pprofile=ollama` then replacing `groq-cloud` in `-Dspring.profiles.active` with `ollama`.
 
 #### PostgresML
 
 ```bash
 ./gradlew build bootRun -Dspring.profiles.active=advanced,groq-cloud,postgresml -Pstore=postgresml
 ```
-> You also have the option of running with `ollama`.
+> You also have the option of building with `-Pprofile=ollama` then replacing `groq-cloud` in `-Dspring.profiles.active` with `ollama`.
 
 A key thing to note is that **you must activate a combination** of Spring profiles:
 
