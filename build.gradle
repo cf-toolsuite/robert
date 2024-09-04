@@ -37,7 +37,10 @@ dependencies {
 	if (project.hasProperty('store') && project.getProperty('store') == 'chroma') {
 		implementation 'org.springframework.ai:spring-ai-chroma-store-spring-boot-starter'
 	}
-	if (project.hasProperty('store') && project.getProperty('store') == 'postgres') {
+	if (project.hasProperty('store') && project.getProperty('store') == 'pgvector') {
+		implementation 'org.springframework.ai:spring-ai-pgvector-store-spring-boot-starter'
+	}
+	if (project.hasProperty('store') && project.getProperty('store') == 'postgresml') {
 		implementation 'org.springframework.ai:spring-ai-pgvector-store-spring-boot-starter'
     	implementation 'org.springframework.ai:spring-ai-postgresml-spring-boot-starter'
 	}

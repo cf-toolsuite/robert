@@ -53,7 +53,7 @@ Open another terminal shell and execute
 
 ### with Vector database
 
-This setup leverages Spring Boot's support for Docker Compose and launches either an instance of Chroma or PostgresML for use by the VectorStore.  This mode activates Git repository ingestion and Document metadata enrichment for Java source files found.  It also activates the [DependencyAwareRefactoringService](../src/main/java/org/cftoolsuite/service/DependencyAwareRefactoringService.java).
+This setup leverages Spring Boot's support for Docker Compose and launches either an instance of Chroma, PgVector, or PostgresML for use by the VectorStore.  This mode activates Git repository ingestion and Document metadata enrichment for Java source files found.  It also activates the [DependencyAwareRefactoringService](../src/main/java/org/cftoolsuite/service/DependencyAwareRefactoringService.java).
 
 #### Chroma
 
@@ -62,11 +62,17 @@ This setup leverages Spring Boot's support for Docker Compose and launches eithe
 ```
 > You also have the option of running with `ollama`.
 
+#### PgVector
+
+```bash
+./gradlew build bootRun -Dspring.profiles.active=advanced,groq-cloud,pgvector -Pstore=pgvector
+```
+> You also have the option of running with `ollama`.
 
 #### PostgresML
 
 ```bash
-./gradlew build bootRun -Dspring.profiles.active=advanced,groq-cloud,postgresml -Pstore=postgres
+./gradlew build bootRun -Dspring.profiles.active=advanced,groq-cloud,postgresml -Pstore=postgresml
 ```
 > You also have the option of running with `ollama`.
 
@@ -74,7 +80,7 @@ A key thing to note is that **you must activate a combination** of Spring profil
 
 * `advanced`
 * an LLM provider (i.e., `groq-cloud` or `ollama`)
-* a store (i.e., `chroma` or `postgresml`)
+* a store (i.e., `chroma`, `pgvector`, or `postgresml`)
 
 and a Gradle project property, either of:
 

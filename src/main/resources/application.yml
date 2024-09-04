@@ -112,11 +112,35 @@ spring:
 spring:
   config:
     activate:
+      on-profile: pgvector
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: postgres
+    password: postgres
+
+  ai:
+    vectorstore:
+      pgvector:
+        initialize-schema: true
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+        dimensions: 1536
+
+  docker:
+    compose:
+      file: ./docker-compose.pgvector.yml
+
+---
+
+spring:
+  config:
+    activate:
       on-profile: postgresml
 
   datasource:
-    url: jdbc:postgresql://localhost:5433/postgresml
-    username: postgresml
+    url: jdbc:postgresql://localhost:5433/postgres
+    username: postgres
     password: ""
 
   ai:
@@ -125,9 +149,11 @@ spring:
         enabled: false
     vectorstore:
       pgvector:
-        index-type: HNSW
+        initialize-schema: true
+        remove-existing-vector-store-table: true
+        index-type: none
         distance-type: COSINE_DISTANCE
-        dimensions: 1536
+        dimensions: 4096
     postgresml:
       embedding:
         options:
