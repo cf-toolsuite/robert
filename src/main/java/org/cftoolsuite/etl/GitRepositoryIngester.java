@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.document.DocumentTransformer;
+import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.ListableBeanFactory;
 
@@ -48,6 +49,7 @@ public class GitRepositoryIngester {
             transformers.entrySet().forEach(entry -> entry.getValue().apply(documents));
         }
 
-        store.accept(documents);
+        TokenTextSplitter splitter = new TokenTextSplitter();
+        store.accept(splitter.apply(documents));
     }
 }
