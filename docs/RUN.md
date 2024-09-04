@@ -37,11 +37,12 @@ Open a terminal shell and execute
 
 ### with Ollama
 
-Open a terminal shell and execute
+Open a terminal shell and execute:
 
 ```bash
-ollama pull llama3.1:70b
-ollama run llama3.1:70b
+ollama pull mistral
+ollama pull nomic-embed-text
+ollama run mistral
 ```
 
 Open another terminal shell and execute
@@ -51,7 +52,7 @@ Open another terminal shell and execute
 ```
 > You'll need to manually stop to the application with `Ctrl+C`
 
-^ If you want to override the model being used you could add `-Dspring.ai.ollama.chat.options.model={model_name}` to the above and replace `{model_name}` with a supported model.
+^ If you want to override the chat model you could add `-Dspring.ai.ollama.chat.options.model={model_name}` to the above and replace `{chat_model_name}` with a supported model.  Likewise, you may override the embedding model with `-Dspring.ai.ollama.embedding.options.model={embedding_model_name}`.
 
 ### with Vector database
 

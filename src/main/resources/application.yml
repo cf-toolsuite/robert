@@ -5,6 +5,10 @@ spring:
   application:
     name: robert
 
+  mvc:
+    async:
+      request-timeout: ${SPRING_MVC_ASYNC_REQUEST-TIMEOUT:-1}
+
   threads:
     virtual:
       enabled: true
@@ -54,17 +58,13 @@ spring:
 
   ai:
     openai:
-      base_url: https://api.groq.com/openai
+      base_url: ${OPENAI_BASE_URL:https://api.groq.com/openai}
       chat:
         options:
-          model: llama-3.1-70b-versatile
-          temperature: 0.8
-        observations:
-          include-prompt: true
-          include-completion: true
+          model: ${CHAT_MODEL:llama-3.1-70b-versatile}
       embedding:
         options:
-          model: text-embedding-3-large
+          model: ${EMBEDDING_MODEL:text-embedding-3-large}
 
 ---
 
@@ -77,13 +77,16 @@ spring:
     exclude: org.springframework.ai.autoconfigure.openai.OpenAiAutoConfiguration
 
   ai:
-    openai:
-      embedding:
-        enabled: false
     ollama:
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
       chat:
         options:
-          model: mistral
+          model: ${CHAT_MODEL:mistral}
+          num-ctx: ${CHAT_MODEL_CONTEXT_LENGTH:32768}
+          truncate: false
+      embedding:
+        options:
+          model: ${EMBEDDING_MODEL:nomic-embed-text}
 
 ---
 
@@ -124,9 +127,10 @@ spring:
       on-profile: pgvector
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/postgres
-    username: postgres
-    password: postgres
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:org.postgresql.Driver}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/postgres}
+    username: ${SPRING_DATASOURCE_USER:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
 
   ai:
     vectorstore:
@@ -148,9 +152,10 @@ spring:
       on-profile: postgresml
 
   datasource:
-    url: jdbc:postgresql://localhost:5433/postgres
-    username: postgres
-    password: ""
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:org.postgresql.Driver}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/postgres}
+    username: ${SPRING_DATASOURCE_USER:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:""}
 
   ai:
     openai:
