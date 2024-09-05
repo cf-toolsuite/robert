@@ -2,11 +2,12 @@
 
 * [Endpoints](#endpoints)
   * [Clone](#clone)
+  * [Ingest](#ingest)
   * [Refactor](#refactor)
 
 ## Endpoints
 
-Both endpoints below work with [GitSettings.java](../src/main/java/org/cftoolsuite/util/GitSettings.java).
+Endpoints below work with [GitRequest.java](../src/main/java/org/cftoolsuite/domain/GitRequest.java).
 
 The minimum required inputs are:
 
@@ -32,6 +33,17 @@ POST /clone
 ```
 
 Clones source from a Git repository to your local desktop
+
+### Ingest
+
+This endpoint is only available when `spring.profiles.active` includes `advanced` mode.  You must ingest a repository before initiating a refactor request.
+
+```python
+POST /ingest
+```
+
+Clones then ingests all files from a Git repository.  Contents of each file along with appropriate metadata are stored in a Vector database.
+
 
 ### Refactor
 

@@ -14,7 +14,6 @@ import org.cftoolsuite.client.PullRequestClientFactory;
 import org.cftoolsuite.domain.GitRequest;
 import org.cftoolsuite.domain.GitResponse;
 import org.cftoolsuite.domain.RefactoredSource;
-import org.cftoolsuite.etl.GitRepositoryIngester;
 import org.eclipse.jgit.lib.Repository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +35,6 @@ public class DependencyAwareRefactoringService implements RefactoringService {
     private final String prompt;
     private final GitClient gitClient;
     private final PullRequestClientFactory pullRequestClientFactory;
-    private final GitRepositoryIngester ingester;
     private final VectorStore store;
 
     public DependencyAwareRefactoringService(
@@ -45,7 +43,6 @@ public class DependencyAwareRefactoringService implements RefactoringService {
         String prompt,
         GitClient gitClient,
         PullRequestClientFactory pullRequestClientFactory,
-        GitRepositoryIngester ingester,
         VectorStore store
     ) {
         this.chatClient = chatClient;
@@ -53,7 +50,6 @@ public class DependencyAwareRefactoringService implements RefactoringService {
         this.prompt = prompt;
         this.gitClient = gitClient;
         this.pullRequestClientFactory = pullRequestClientFactory;
-        this.ingester = ingester;
         this.store = store;
     }
 
@@ -68,7 +64,6 @@ public class DependencyAwareRefactoringService implements RefactoringService {
 
     protected GitResponse refactor(GitRequest request) throws IOException {
         Repository repo = gitClient.getRepository(request);
-        ingester.ingest(repo, request.commit());
 
         List<Document> candidates = CollectionUtils.isEmpty(request.filePaths()) ?
             store.similaritySearch(SearchRequest.query(seek).withTopK(100)) :

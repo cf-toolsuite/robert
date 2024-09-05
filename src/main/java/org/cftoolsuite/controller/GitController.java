@@ -39,7 +39,7 @@ public class GitController {
             return ResponseEntity.ok(response);
         } catch (GitOperationException e) {
             log.error("Trouble processing refactor request for Git repository", e);
-            return ResponseEntity.unprocessableEntity().body(GitResponse.noneFor(request.uri()));
+            return ResponseEntity.badRequest().body(GitResponse.noneFor(request.uri()));
         }
     }
 }
