@@ -51,10 +51,9 @@ public class Advanced {
         String prompt,
         GitClient gitClient,
         PullRequestClientFactory pullRequestClientFactory,
-        GitRepositoryIngester gitRepositoryIngester,
         VectorStore store) {
         return new DependencyAwareRefactoringService(
-            ChatClient.builder(model).build(), seek, prompt, gitClient, pullRequestClientFactory, gitRepositoryIngester, store);
+            ChatClient.builder(model).build(), seek, prompt, gitClient, pullRequestClientFactory, store);
     }
 
     @Bean
