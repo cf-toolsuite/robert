@@ -9,10 +9,9 @@
 
 Endpoints below work with [GitRequest.java](../src/main/java/org/cftoolsuite/domain/GitRequest.java).
 
-The minimum required inputs are:
+The minimum required input is:
 
 * `uri` - a remote Git repository, must be accessible via `https` protocol
-* `filePaths` - either a set of relative file paths from the root of the repository or a set of package names
 
 Optional inputs are:
 
@@ -21,6 +20,8 @@ Optional inputs are:
 * `password` - your Git repository provider account password
   * if you have a Github account, then this value should be set to a classic [personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic) with full `repo` permissions.
 * `commit` - a commit hash, if not supplied the latest commit on origin/main is used
+* `filePaths` - either a set of relative file paths from the root of the repository or a set of package names
+* `allowedExtensions` - a set of allowed file extensions used for file path filtering purposes; when specified, only `filePaths` containing a file extension in the set of extensions will be considered
 * `pushToRemoteEnabled` - whether or not to git push updates on your local branch to remote; if you've set this value to `true` then you must also supply `username` and `password` values as push operation is authenticated
 * `pullRequestEnabled` - whether or not to file a pull request; if you've set this value to `true` then you must also supply `username` and `password` values as pull request operation is authenticated
 

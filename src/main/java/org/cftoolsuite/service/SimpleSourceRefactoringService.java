@@ -55,7 +55,7 @@ public class SimpleSourceRefactoringService implements RefactoringService {
 
     protected GitResponse refactor(GitRequest request, String delay) throws IOException {
         Repository repo = gitClient.getRepository(request);
-        Map<String, String> sourceMap = gitClient.readFiles(repo, request.filePaths(), request.commit());
+        Map<String, String> sourceMap = gitClient.readFiles(repo, request.filePaths(), request.allowedExtensions(), request.commit());
 
         log.info("Found {} files to refactor.", sourceMap.size());
         Map<String, String> targetMap = new HashMap<>();

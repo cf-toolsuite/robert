@@ -2,15 +2,24 @@ package org.cftoolsuite.client;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import org.apache.commons.lang3.StringUtils;
 import org.cftoolsuite.domain.GitRequest;
@@ -30,7 +39,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
-
 @Component
 public class GitClient {
 
@@ -42,16 +50,16 @@ public class GitClient {
         Assert.hasText(uri, "URI of remote Git repository must be specified");
         Assert.isTrue(uri.startsWith("https://"), "URI scheme must be https");
         Assert.isTrue(uri.endsWith(".git"), "URI must end with .git");
-        String path = String.join(File.separator, "tmp", uri.substring(uri.lastIndexOf("/") + 1).replace(".git",""));
+        String path = String.join(File.separator, "tmp", uri.substring(uri.lastIndexOf("/") + 1).replace(".git", ""));
         try {
             File directory = new File(path);
             Path p = Paths.get(directory.toURI());
             if (Files.exists(p)) {
                 Files
-                .walk(p)
-                .sorted(Comparator.reverseOrder())
-                .map(Path::toFile)
-                .forEach(File::delete);
+                    .walk(p)
+                    .sorted(Comparator.reverseOrder())
+                    .map(Path::toFile)
+                    .forEach(File::delete);
             }
             Files.deleteIfExists(p);
             if (request.isAuthenticated()) {
@@ -90,30 +98,35 @@ public class GitClient {
         return result;
     }
 
-    // @see https://stackoverflow.com/questions/42820282/get-the-latest-commit-in-a-repository-with-jgit
+    // @see
+    // https://stackoverflow.com/questions/42820282/get-the-latest-commit-in-a-repository-with-jgit
     public RevCommit getLatestCommit(Repository repo) {
+        Assert.notNull(repo, "Repository must not be null");
         RevCommit latestCommit = null;
         try (
             Git git = new Git(repo);
-            RevWalk walk = new RevWalk(repo);
-        ) {
+            RevWalk walk = new RevWalk(repo);) {
             List<Ref> branches = git.branchList().call();
             latestCommit = branches
-                .stream()
-                .map(branch -> {
-                    try {
-                        return walk.parseCommit(branch.getObjectId());
-                    } catch (IOException e) {
-                        throw new GitOperationException("Trouble determining latest commit", e);
-                    }
-                })
-                .sorted(Comparator.comparing((RevCommit commit) -> commit.getAuthorIdent().getWhen()).reversed())
-                .findFirst()
-                .orElse(null);
+                    .stream()
+                    .map(branch -> {
+                        try {
+                            return walk.parseCommit(branch.getObjectId());
+                        } catch (IOException e) {
+                            throw new GitOperationException("Trouble determining latest commit", e);
+                        }
+                    })
+                    .sorted(Comparator.comparing((RevCommit commit) -> commit.getAuthorIdent().getWhen()).reversed())
+                    .findFirst()
+                    .orElse(null);
 
             if (latestCommit != null) {
-                log.info("Latest commit with id {} was made {} on {} by {}", latestCommit.getId().name(), latestCommit.getAuthorIdent().getWhen(),
-                        latestCommit.getShortMessage(), latestCommit.getAuthorIdent().getName());
+                log.info("Latest commit with id {} was made {} on {} by {}",
+                    latestCommit.getId().name(),
+                    latestCommit.getAuthorIdent().getWhen(),
+                    latestCommit.getShortMessage(),
+                    latestCommit.getAuthorIdent().getName()
+                );
             }
         } catch (GitAPIException e) {
             throw new GitOperationException("Trouble obtaining list of branches", e);
@@ -122,6 +135,9 @@ public class GitClient {
     }
 
     public Map<String, String> readFile(Repository repo, String filePath, String commit) throws IOException {
+        Assert.notNull(repo, "Repository must not be null");
+        Assert.hasText(filePath, "File path must be specified");
+        Assert.hasText(commit, "Commit ID must be specified");
         Map<String, String> result = new HashMap<>();
         ObjectId oid = repo.resolve(commit);
         RevCommit revision = repo.parseCommit(oid);
@@ -134,41 +150,120 @@ public class GitClient {
                 result.put(path, contents);
                 return result;
             } else {
-                throw new IllegalArgumentException(String.format("No file found for commitId=%s and filePath=%s", commit, filePath));
+                throw new IllegalArgumentException(
+                        String.format("No file found for commitId=%s and filePath=%s", commit, filePath));
             }
         }
     }
 
-    public Map<String, String> readFiles(Repository repo, Set<String> paths, String commit) throws IOException {
-        Map<String, String> result = new HashMap<>();
-        // Determine the commit to use
-        String commitToUse = StringUtils.isNotBlank(commit) ? commit : getLatestCommit(repo).name();
-        // Resolve the commit object
+    public Map<String, String> readFiles(Repository repo, Set<String> paths, Set<String> allowedExtensions,
+            String commit) throws IOException {
+        Assert.notNull(repo, "Repository must not be null");
+        String commitToUse = StringUtils.defaultIfBlank(commit, getLatestCommit(repo).name());
         ObjectId commitId = repo.resolve(commitToUse);
         RevCommit revision = repo.parseCommit(commitId);
+
         if (CollectionUtils.isEmpty(paths)) {
-            try (TreeWalk treeWalk = new TreeWalk(repo)) {
-                treeWalk.addTree(revision.getTree());
-                treeWalk.setRecursive(true);
-                while (treeWalk.next()) {
-                    result.putAll(readFile(repo,treeWalk.getPathString(), commitToUse));
-                }
-            }
+            return readAllFiles(repo, revision, allowedExtensions, commitToUse);
         } else {
-            for (String path: paths) {
-                if (!path.contains("/") && path.contains(".")) {
-                    result.putAll(readFilesFromPackages(repo, Set.of(path), commitToUse));
-                } else if (path.contains("/")) {
-                    result.putAll(readFile(repo, path, commitToUse));
-                } else {
-                    log.warn("{} is not a valid path!  Skipping.", path);
-                }
-            }
+            return
+                paths
+                    .stream()
+                    .filter(path -> isValidPath(path))
+                    .flatMap(path -> readPathContent(repo, path, allowedExtensions, commitToUse).entrySet().stream())
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1));
         }
-        return result;
     }
 
-    public Map<String, String> readFilesFromPackages(Repository repo, Set<String> packageNames, String commit) throws IOException {
+    private Map<String, String> readAllFiles(Repository repo, RevCommit revision, Set<String> allowedExtensions,
+            String commitToUse) throws IOException {
+        try (TreeWalk treeWalk = new TreeWalk(repo)) {
+            treeWalk.addTree(revision.getTree());
+            treeWalk.setRecursive(true);
+            return StreamSupport.stream(Spliterators.spliteratorUnknownSize(new Iterator<String>() {
+                @Override
+                public boolean hasNext() {
+                    try {
+                        return treeWalk.next();
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    }
+                }
+
+                @Override
+                public String next() {
+                    return treeWalk.getPathString();
+                }
+            }, Spliterator.ORDERED), false)
+                .filter(path -> isAllowedExtension(path, allowedExtensions))
+                .flatMap(path -> {
+                    try {
+                        return readFile(repo, path, commitToUse).entrySet().stream();
+                    } catch (IOException e) {
+                        log.warn("Trouble reading file '{}': {}", path, e.getMessage());
+                        return Stream.empty();
+                    }
+                })
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1));
+        }
+    }
+
+    private boolean isValidPath(String path) {
+        return
+            Optional
+                .of(path)
+                .filter(p -> Stream.of(
+                    p.contains(".") && !p.contains("/"),
+                    p.contains("/")
+                ).anyMatch(Boolean::booleanValue))
+                .map(p -> true)
+                .orElseGet(() -> {
+                    log.warn("{} is not a valid path! Skipping.", path);
+                    return false;
+                });
+    }
+
+    private Map<String, String> readPathContent(Repository repo, String path, Set<String> allowedExtensions,
+            String commitToUse) {
+        if (isAllowedExtension(path, allowedExtensions)) {
+            try {
+                return
+                    isJavaPackage(path)
+                        ? readFilesFromPackages(repo, Set.of(path), commitToUse)
+                        : readFile(repo, path, commitToUse);
+            } catch (IOException e) {
+                log.warn("Trouble reading path '{}': {}", path, e.getMessage());
+                return Collections.emptyMap();
+            }
+        } else {
+            log.warn("File '{}' skipped due to disallowed extension.", path);
+            return Collections.emptyMap();
+        }
+    }
+
+    private boolean isJavaPackage(String path) {
+        if (path == null || path.isEmpty()) {
+            return false;
+        }
+        return path.chars()
+                  .filter(ch -> ch == '.')
+                  .count() > 1;
+    }
+
+    private boolean isAllowedExtension(String path, Set<String> allowedExtensions) {
+        if (CollectionUtils.isEmpty(allowedExtensions)) {
+            return true;
+        }
+        return Optional.of(path)
+            .filter(p -> p.lastIndexOf('.') != -1)
+            .map(p -> p.substring(p.lastIndexOf('.') + 1))
+            .map(allowedExtensions::contains)
+            .orElse(false);
+    }
+
+    public Map<String, String> readFilesFromPackages(Repository repo, Set<String> packageNames, String commit)
+            throws IOException {
+        Assert.notNull(repo, "Repository must not be null");
         Map<String, String> result = new HashMap<>();
         // Determine the commit to use
         String commitToUse = StringUtils.isNotBlank(commit) ? commit : getLatestCommit(repo).name();
@@ -201,6 +296,10 @@ public class GitClient {
     }
 
     public void writeFile(Repository repo, String filePath, String contents, String branch) {
+        Assert.notNull(repo, "Repository must not be null");
+        Assert.hasText(filePath, "File path must be specified");
+        Assert.hasText(contents, "File contents must be specified");
+        Assert.hasText(branch, "Git branch name must be specified");
         try (Git git = new Git(repo)) {
             // Check if the branch exists
             boolean branchExists = repo.findRef(branch) != null;
@@ -240,15 +339,26 @@ public class GitClient {
     }
 
     public void push(GitRequest request, Repository repo, String branch) {
+        Assert.notNull(request, "Git request must not be null");
+        Assert.notNull(repo, "Repository must not be null");
         try (Git git = new Git(repo)) {
-            if (request.pushToRemoteEnabled() && request.isAuthenticated()) {
-                CredentialsProvider credentialsProvider = new UsernamePasswordCredentialsProvider(request.username(), request.password());
-                git.push()
-                    .setRemote("origin")
-                    .setCredentialsProvider(credentialsProvider)
-                    .add(String.format("refs/heads/%s", branch))
-                    .call();
-                log.info("Pushed changes to remote [{}].", branch);
+            if (request.pushToRemoteEnabled()) {
+                if (request.isAuthenticated()) {
+                    CredentialsProvider credentialsProvider =
+                        new UsernamePasswordCredentialsProvider(
+                            request.username(),
+                            request.password()
+                        );
+                    git
+                        .push()
+                        .setRemote("origin")
+                        .setCredentialsProvider(credentialsProvider)
+                        .add(String.format("refs/heads/%s", branch))
+                        .call();
+                    log.info("Pushed changes to remote [{}].", branch);
+                } else {
+                    log.warn("Push to remote requires authentication! Skipping push.");
+                }
             } else {
                 log.info("Push to remote not enabled!");
             }
@@ -257,4 +367,3 @@ public class GitClient {
         }
     }
 }
-

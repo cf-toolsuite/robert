@@ -12,6 +12,7 @@ public record GitRequest(
         String password,
         String commit,
         Set<String> filePaths,
+        Set<String> allowedExtensions,
         boolean pushToRemoteEnabled,
         boolean pullRequestEnabled) {
 
@@ -22,6 +23,7 @@ public record GitRequest(
             String password,
             String commit,
             Set<String> filePaths,
+            Set<String> allowedExtensions,
             boolean pushToRemoteEnabled,
             boolean pullRequestEnabled) {
         this.uri = (uri != null) ? uri : "";
@@ -30,6 +32,7 @@ public record GitRequest(
         this.password = (password != null) ? password : "";
         this.commit = (commit != null) ? commit : "";
         this.filePaths = (filePaths != null) ? filePaths : new HashSet<>();
+        this.allowedExtensions = (allowedExtensions != null) ? allowedExtensions : new HashSet<>();
         this.pushToRemoteEnabled = pushToRemoteEnabled;
         this.pullRequestEnabled = pullRequestEnabled;
     }
@@ -45,6 +48,7 @@ public record GitRequest(
         private String password;
         private String commit;
         private Set<String> filePaths;
+        private Set<String> allowedExtensions;
         private boolean pushToRemoteEnabled;
         private boolean pullRequestEnabled;
 
@@ -78,6 +82,11 @@ public record GitRequest(
             return this;
         }
 
+        public GitRequestBuilder allowedExtensions(Set<String> allowedExtensions) {
+            this.allowedExtensions = (allowedExtensions != null) ? allowedExtensions : new HashSet<>();
+            return this;
+        }
+
         public GitRequestBuilder pushToRemoteEnabled(boolean pushToRemoteEnabled) {
             this.pushToRemoteEnabled = pushToRemoteEnabled;
             return this;
@@ -89,7 +98,7 @@ public record GitRequest(
         }
 
         public GitRequest build() {
-            return new GitRequest(uri, base, username, password, commit, filePaths, pushToRemoteEnabled, pullRequestEnabled);
+            return new GitRequest(uri, base, username, password, commit, filePaths, allowedExtensions, pushToRemoteEnabled, pullRequestEnabled);
         }
     }
 
