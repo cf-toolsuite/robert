@@ -50,8 +50,10 @@ dependencies {
 	}
 	implementation 'io.github.cdancy:bitbucket-rest:3.1.1'
 	implementation 'io.github.hkarthik7:azd:5.0.12'
-	implementation 'io.micrometer:micrometer-tracing-bridge-otel'
-	implementation 'io.opentelemetry:opentelemetry-exporter-zipkin'
+	if (project.hasProperty('vector-db-provider') || project.hasProperty('embedding-model-provider')) {
+		implementation 'io.micrometer:micrometer-tracing-bridge-otel'
+		implementation 'io.opentelemetry:opentelemetry-exporter-zipkin'
+	}
 	runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 	developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'

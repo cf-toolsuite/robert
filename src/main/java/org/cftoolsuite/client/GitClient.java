@@ -225,18 +225,19 @@ public class GitClient {
 
     private Map<String, String> readPathContent(Repository repo, String path, Set<String> allowedExtensions,
             String commitToUse) {
-        if (isAllowedExtension(path, allowedExtensions)) {
-            try {
-                return
-                    isJavaPackage(path)
-                        ? readFilesFromPackages(repo, Set.of(path), commitToUse)
-                        : readFile(repo, path, commitToUse);
-            } catch (IOException e) {
-                log.warn("Trouble reading path '{}': {}", path, e.getMessage());
-                return Collections.emptyMap();
+        try {
+            if (isJavaPackage(path)) {
+                return readFilesFromPackages(repo, Set.of(path), commitToUse);
+            } else {
+                if (isAllowedExtension(path, allowedExtensions)) {
+                    return readFile(repo, path, commitToUse);
+                } else {
+                    log.warn("File '{}' skipped due to disallowed extension.", path);
+                    return Collections.emptyMap();
+                }
             }
-        } else {
-            log.warn("File '{}' skipped due to disallowed extension.", path);
+        } catch (IOException e) {
+            log.warn("Trouble reading path '{}': {}", path, e.getMessage());
             return Collections.emptyMap();
         }
     }
@@ -255,10 +256,15 @@ public class GitClient {
             return true;
         }
         return Optional.of(path)
-            .filter(p -> p.lastIndexOf('.') != -1)
-            .map(p -> p.substring(p.lastIndexOf('.') + 1))
-            .map(allowedExtensions::contains)
-            .orElse(false);
+            .map(p -> {
+                int lastDotIndex = p.lastIndexOf('.');
+                if (lastDotIndex == -1) {
+                    return true; // No extension, so return true
+                }
+                String extension = p.substring(lastDotIndex + 1);
+                return allowedExtensions.contains(extension);
+            })
+            .orElse(true); // If path is null or empty, return true
     }
 
     public Map<String, String> readFilesFromPackages(Repository repo, Set<String> packageNames, String commit)

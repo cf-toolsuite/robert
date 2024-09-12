@@ -3,6 +3,7 @@ package org.cftoolsuite.etl;
 import java.io.IOException;
 
 import org.cftoolsuite.domain.GitRequest;
+import org.cftoolsuite.domain.IngestRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
@@ -24,7 +25,7 @@ public class EtlController {
     }
 
     @PostMapping("/ingest")
-    public ResponseEntity<Void> ingest(@RequestBody GitRequest request) {
+    public ResponseEntity<Void> ingest(@RequestBody IngestRequest request) {
         try {
             ingester.ingest(request);
             return ResponseEntity.accepted().build();

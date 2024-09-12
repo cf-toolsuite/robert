@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import org.cftoolsuite.client.GitClient;
 import org.cftoolsuite.domain.GitRequest;
+import org.cftoolsuite.domain.IngestRequest;
 import org.eclipse.jgit.lib.Repository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,9 +32,10 @@ public class GitRepositoryIngester {
         this.beanFactory = beanFactory;
     }
 
-    public void ingest(GitRequest request) throws IOException {
-        Repository repo = client.getRepository(request);
-        Map<String, String> fileMap = client.readFiles(repo, request.filePaths(), request.allowedExtensions(), request.commit());
+    public void ingest(IngestRequest request) throws IOException {
+        GitRequest gitRequest = GitRequest.builder().uri(request.uri()).username(request.username()).password(request.password()).commit(request.commit()).build();
+        Repository repo = client.getRepository(gitRequest);
+        Map<String, String> fileMap = client.readFiles(repo, null, null, gitRequest.commit());
         String origin = client.getOrigin(repo);
         List<Document> documents =
             fileMap
