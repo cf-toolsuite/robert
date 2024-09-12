@@ -48,6 +48,15 @@ management:
     sampling:
       probability: 1.0
 
+app:
+  allowed-extensions:
+    PHP: "php,inc,class"
+    Java: "java"
+    .Net: "cs,vb,config,nuget"
+    Go: "go"
+    Rust: "rs,rlib"
+    Ruby: "rb,rbx"
+
 ---
 
 spring:

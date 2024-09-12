@@ -4,6 +4,7 @@
   * [Clone](#clone)
   * [Ingest](#ingest)
   * [Refactor](#refactor)
+  * [Language extensions](#language-extensions)
 
 ## Endpoints
 
@@ -56,7 +57,7 @@ Clones and refactors source
 
 > R*bert clones the remote repository, iterates over a set of file paths, and applies updates to each file based upon criteria in your prompt.  It writes updates to a local branch, and if configured to do so, it will push those updates back to origin.  Note: Refactoring does not take into account dependencies or relationships within the set of file paths.
 
-#### Sample interaction
+**Sample interaction**
 
 ```bash
 ❯ http POST :8080/refactor uri=https://github.com/cf-toolsuite/cf-butler.git filePaths:='["org.cftoolsuite.cfapp.domain.accounting.application"]'
@@ -80,7 +81,7 @@ Transfer-Encoding: chunked
 }
 ```
 
-#### Sample log output
+**Sample log output**
 
 ```bash
 11:40:01.323 [main] INFO  org.cftoolsuite.RobertApplication - Started RobertApplication in 2.62 seconds (process running for 2.888)
@@ -101,7 +102,7 @@ Transfer-Encoding: chunked
 11:43:02.899 [tomcat-handler-2] INFO  o.c.client.GithubPullRequestClient - Pull request not enabled!
 ```
 
-#### Sample git log
+**Sample git log**
 
 ```bash
 ❯ cd tmp/cf-butler
@@ -145,3 +146,52 @@ then
 ❯ git difftool --dir-diff refactor-{uuid} main
 ```
 > Replace `{uuid}` with the suffix of the refactored branch
+
+
+### Language extensions
+
+```python
+GET /language-extensions
+```
+
+Returns a list of programming languages and associated file extensions used for file path filtering purposes (on refactor requests)
+
+
+**Sample interaction**
+
+```bash
+❯ http :8080/language-extensions
+HTTP/1.1 200
+Connection: keep-alive
+Content-Type: application/json
+Date: Wed, 11 Sep 2024 23:47:23 GMT
+Keep-Alive: timeout=60
+Transfer-Encoding: chunked
+
+[
+    {
+        "extensions": "go",
+        "language": "Go"
+    },
+    {
+        "extensions": "php,inc,class",
+        "language": "PHP"
+    },
+    {
+        "extensions": "java",
+        "language": "Java"
+    },
+    {
+        "extensions": "rs,rlib",
+        "language": "Rust"
+    },
+    {
+        "extensions": "cs,vb,config,nuget",
+        "language": "Net"
+    },
+    {
+        "extensions": "rb,rbx",
+        "language": "Ruby"
+    }
+]
+```
