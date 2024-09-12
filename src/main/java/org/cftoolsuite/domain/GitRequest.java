@@ -1,4 +1,4 @@
-package org.cftoolsuite.util;
+package org.cftoolsuite.domain;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -12,6 +12,7 @@ public record GitRequest(
         String password,
         String commit,
         Set<String> filePaths,
+        Set<String> allowedExtensions,
         boolean pushToRemoteEnabled,
         boolean pullRequestEnabled) {
 
@@ -22,14 +23,16 @@ public record GitRequest(
             String password,
             String commit,
             Set<String> filePaths,
+            Set<String> allowedExtensions,
             boolean pushToRemoteEnabled,
             boolean pullRequestEnabled) {
         this.uri = (uri != null) ? uri : "";
         this.base = StringUtils.isNotBlank(base) ? base : "main";
         this.username = username;
         this.password = (password != null) ? password : "";
-        this.commit = commit;
+        this.commit = (commit != null) ? commit : "";
         this.filePaths = (filePaths != null) ? filePaths : new HashSet<>();
+        this.allowedExtensions = (allowedExtensions != null) ? allowedExtensions : new HashSet<>();
         this.pushToRemoteEnabled = pushToRemoteEnabled;
         this.pullRequestEnabled = pullRequestEnabled;
     }
@@ -38,62 +41,68 @@ public record GitRequest(
         return StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password);
     }
 
-    public static class GitSettingsBuilder {
-        private String uri = "";
-        private String base = "main";
+    public static class GitRequestBuilder {
+        private String uri;
+        private String base;
         private String username;
-        private String password = "";
+        private String password;
         private String commit;
-        private Set<String> filePaths = new HashSet<>();
+        private Set<String> filePaths;
+        private Set<String> allowedExtensions;
         private boolean pushToRemoteEnabled;
         private boolean pullRequestEnabled;
 
-        public GitSettingsBuilder uri(String uri) {
-            this.uri = uri;
+        public GitRequestBuilder uri(String uri) {
+            this.uri = (uri != null) ? uri : "";
             return this;
         }
 
-        public GitSettingsBuilder base(String base) {
-            this.base = base;
+        public GitRequestBuilder base(String base) {
+            this.base = StringUtils.isNotBlank(base) ? base : "main";
             return this;
         }
 
-        public GitSettingsBuilder username(String username) {
+        public GitRequestBuilder username(String username) {
             this.username = username;
             return this;
         }
 
-        public GitSettingsBuilder password(String password) {
-            this.password = password;
+        public GitRequestBuilder password(String password) {
+            this.password = (password != null) ? password : "";
             return this;
         }
 
-        public GitSettingsBuilder commit(String commit) {
-            this.commit = commit;
+        public GitRequestBuilder commit(String commit) {
+            this.commit = (commit != null) ? commit : "";
             return this;
         }
 
-        public GitSettingsBuilder filePaths(Set<String> filePaths) {
-            this.filePaths = filePaths;
+        public GitRequestBuilder filePaths(Set<String> filePaths) {
+            this.filePaths = (filePaths != null) ? filePaths : new HashSet<>();
             return this;
         }
 
-        public GitSettingsBuilder pushToRemoteEnabled(boolean pushToRemoteEnabled) {
+        public GitRequestBuilder allowedExtensions(Set<String> allowedExtensions) {
+            this.allowedExtensions = (allowedExtensions != null) ? allowedExtensions : new HashSet<>();
+            return this;
+        }
+
+        public GitRequestBuilder pushToRemoteEnabled(boolean pushToRemoteEnabled) {
             this.pushToRemoteEnabled = pushToRemoteEnabled;
             return this;
         }
 
-        public GitSettingsBuilder pullRequestEnabled(boolean pullRequestEnabled) {
+        public GitRequestBuilder pullRequestEnabled(boolean pullRequestEnabled) {
             this.pullRequestEnabled = pullRequestEnabled;
             return this;
         }
 
         public GitRequest build() {
-            return new GitRequest(uri, base, username, password, commit, filePaths, pushToRemoteEnabled, pullRequestEnabled);
+            return new GitRequest(uri, base, username, password, commit, filePaths, allowedExtensions, pushToRemoteEnabled, pullRequestEnabled);
         }
     }
 
-    public static GitSettingsBuilder builder() {
-        return new GitSettingsBuilder();
+    public static GitRequestBuilder builder() {
+        return new GitRequestBuilder();
     }
 }

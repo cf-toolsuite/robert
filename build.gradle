@@ -1,6 +1,8 @@
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '3.3.3'
+	id 'org.cyclonedx.bom' version '1.10.0'
+	id 'com.gorylenko.gradle-git-properties' version '2.4.2'
+	id 'org.springframework.boot' version '3.4.0-M2'
 	id 'io.spring.dependency-management' version '1.1.6'
 }
 
@@ -24,20 +26,34 @@ ext {
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation('org.springframework.boot:spring-boot-starter-actuator')
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	if (!project.hasProperty('profile')) {
-		implementation 'org.springframework.ai:spring-ai-openai-spring-boot-starter'
-	}
-	if (project.hasProperty('profile') && project.getProperty('profile') == 'ollama') {
+	implementation 'org.springframework.ai:spring-ai-openai-spring-boot-starter'
+	if (project.hasProperty('model-api-provider') && project.getProperty('model-api-provider') == 'ollama') {
 		implementation 'org.springframework.ai:spring-ai-ollama-spring-boot-starter'
 	}
+	if (project.hasProperty('vector-db-provider') && project.getProperty('vector-db-provider') == 'chroma') {
+		implementation 'org.springframework.ai:spring-ai-chroma-store-spring-boot-starter'
+	}
+	if (project.hasProperty('vector-db-provider') && project.getProperty('vector-db-provider') == 'pgvector') {
+		implementation 'org.springframework.ai:spring-ai-pgvector-store-spring-boot-starter'
+	}
+	if (project.hasProperty('embedding-model-provider') && project.getProperty('embedding-model-provider') == 'postgresml') {
+    	implementation 'org.springframework.ai:spring-ai-postgresml-spring-boot-starter'
+	}
 	implementation 'org.apache.commons:commons-lang3'
+	implementation 'com.github.javaparser:javaparser-core-serialization:3.26.1'
 	implementation 'org.eclipse.jgit:org.eclipse.jgit:6.10.0.202406032230-r'
 	implementation 'org.kohsuke:github-api:1.324'
-	implementation 'org.gitlab4j:gitlab4j-api:5.6.0'
+	implementation ('org.gitlab4j:gitlab4j-api:5.6.0') {
+		exclude group: 'commons-logging', module: 'commons-logging'
+	}
 	implementation 'io.github.cdancy:bitbucket-rest:3.1.1'
 	implementation 'io.github.hkarthik7:azd:5.0.12'
+	implementation 'io.micrometer:micrometer-tracing-bridge-otel'
+	implementation 'io.opentelemetry:opentelemetry-exporter-zipkin'
+	runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+	developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }

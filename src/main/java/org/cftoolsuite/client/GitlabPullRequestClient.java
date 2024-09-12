@@ -1,9 +1,10 @@
-package org.cftoolsuite.util;
+package org.cftoolsuite.client;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
 
+import org.cftoolsuite.domain.GitRequest;
 import org.eclipse.jgit.lib.Repository;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;

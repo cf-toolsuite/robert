@@ -1,9 +1,10 @@
-package org.cftoolsuite.util;
+package org.cftoolsuite.domain;
 
 import java.util.HashSet;
 import java.util.Set;
 
 public record GitResponse(
+        String prompt,
         String uri,
         String branch,
         String pullRequestUrl,
@@ -11,11 +12,13 @@ public record GitResponse(
 ) {
 
     public GitResponse(
+            String prompt,
             String uri,
             String branch,
             String pullRequestUrl,
             Set<String> impactedFileSet
         ) {
+        this.prompt = prompt;
         this.uri = uri;
         this.branch = branch;
         this.pullRequestUrl = pullRequestUrl;
@@ -23,7 +26,7 @@ public record GitResponse(
     }
 
     public static GitResponse noneFor(String uri) {
-        return new GitResponse(uri, null, null, null);
+        return new GitResponse(null, uri, null, null, null);
     }
 
 }

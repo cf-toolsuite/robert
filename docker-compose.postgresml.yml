@@ -1,0 +1,24 @@
+include:
+  - ./docker-compose.observability.yml
+
+services:
+  postgres:
+    image: ghcr.io/postgresml/postgresml:2.9.3
+    container_name: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - 5433:5432
+    command: sudo -u postgresml psql -d postgresml
+    stdin_open: true
+    tty: true
+    networks:
+      - net
+
+volumes:
+  postgres-data:
+    driver: local
+
+networks:
+  net:
+    driver: bridge

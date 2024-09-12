@@ -1,8 +1,21 @@
 # R*bert
 
+R*bert has two runtime modes of operation: `simple` and `advanced`, where the default mode is set to `simple`.
+
+The `advanced` mode requires you to activate:
+
+* a Gradle [project property](https://docs.gradle.org/current/userguide/migrating_from_maven.html#migmvn:profiles_and_properties) and
+* Spring Boot [profiles](https://docs.spring.io/spring-boot/reference/features/profiles.html)
+
+in order to package the appropriate runtime libraries and then appropriately configure runtime support a [VectorStore](https://docs.spring.io/spring-ai/reference/api/vectordbs.html#_available_implementations) and [EmbeddingModel](https://docs.spring.io/spring-ai/reference/api/embeddings.html#available-implementations).
+
+Both modes work with a [ChatModel](https://docs.spring.io/spring-ai/reference/api/chatmodel.html#_available_implementations).  Currently model support is plumbed for Open AI (including Groq) and Ollama.
+
 ## How to Run with Gradle
 
 ### with Groq Cloud
+
+Build and run a version of the utility that is compatible for use with [Groq Cloud](https://groq.com).  You will need to [obtain an API key](https://console.groq.com/docs/api-keys).
 
 Before launching the app:
 
@@ -24,21 +37,52 @@ Open a terminal shell and execute
 
 ### with Ollama
 
-Open a terminal shell and execute
+Open a terminal shell and execute:
 
 ```bash
-ollama pull llama3.1:70b
-ollama run llama3.1:70b
+ollama pull mistral
+ollama pull nomic-embed-text
+ollama run mistral
 ```
 
 Open another terminal shell and execute
 
 ```bash
-./gradlew bootRun -Dspring.profiles.active=ollama
+./gradlew build bootRun -Dspring.profiles.active=ollama -Pmodel-api-provider=ollama
 ```
 > You'll need to manually stop to the application with `Ctrl+C`
 
-^ If you want to override the model being used you could add `-Dspring.ai.ollama.chat.options.model={model_name}` to the above and replace `{model_name}` with a supported model.
+^ If you want to override the chat model you could add `-Dspring.ai.ollama.chat.options.model={model_name}` to the above and replace `{chat_model_name}` with a supported model.  Likewise, you may override the embedding model with `-Dspring.ai.ollama.embedding.options.model={embedding_model_name}`.
+
+### with Vector database
+
+This setup leverages Spring Boot's support for Docker Compose and launches either an instance of Chroma or PgVector for use by the VectorStore.  This mode activates Git repository ingestion and Document metadata enrichment for Java source files found.  It also activates the [DependencyAwareRefactoringService](../src/main/java/org/cftoolsuite/service/DependencyAwareRefactoringService.java).
+
+#### Chroma
+
+```bash
+./gradlew build bootRun -Dspring.profiles.active=advanced,groq-cloud,chroma -Pvector-db-provider=chroma
+```
+> You also have the option of building with `-Pmodel-api-provider=ollama` then replacing `groq-cloud` in `-Dspring.profiles.active` with `ollama`.
+
+#### PgVector
+
+```bash
+./gradlew build bootRun -Dspring.profiles.active=advanced,groq-cloud,pgvector -Pvector-db-provider=pgvector
+```
+> You also have the option of building with `-Pmodel-api-provider=ollama` then replacing `groq-cloud` in `-Dspring.profiles.active` with `ollama`.
+
+
+A key thing to note is that **you must activate a combination** of Spring profiles, like:
+
+* `advanced`
+* an LLM provider (i.e., `groq-cloud` or `ollama`)
+* a Vector database provider (i.e., `chroma` or `pgvector`)
+
+and Gradle project properties, like:
+
+* `-Pmodel-api-provider=ollama`
+* `-Pvector-db-provider=chroma` or `-Pvector-db-provider=pgvector`
 
 ### with alternate prompt
 
@@ -51,7 +95,7 @@ You may want to override the default, built-in refactoring prompt.  To do that m
 or if you have a sophisticated multi-line prompt you might want to read in the contents this way
 
 ```bash
--Dprompt="$(cat samples/refactor-lombok-slf4j.prompt)"
+-Dprompt="$(cat samples/refactor-lombok-slf4j.st)"
 ```
 > You are certainly free to author your own prompt files, just replace the path above with your own
 
