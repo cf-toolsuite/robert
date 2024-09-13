@@ -14,7 +14,9 @@ public record GitRequest(
         Set<String> filePaths,
         Set<String> allowedExtensions,
         boolean pushToRemoteEnabled,
-        boolean pullRequestEnabled) {
+        boolean pullRequestEnabled,
+        String discoveryPrompt,
+        String refactorPrompt) {
 
     public GitRequest(
             String uri,
@@ -25,7 +27,9 @@ public record GitRequest(
             Set<String> filePaths,
             Set<String> allowedExtensions,
             boolean pushToRemoteEnabled,
-            boolean pullRequestEnabled) {
+            boolean pullRequestEnabled,
+            String discoveryPrompt,
+            String refactorPrompt) {
         this.uri = (uri != null) ? uri : "";
         this.base = StringUtils.isNotBlank(base) ? base : "main";
         this.username = username;
@@ -35,6 +39,8 @@ public record GitRequest(
         this.allowedExtensions = (allowedExtensions != null) ? allowedExtensions : new HashSet<>();
         this.pushToRemoteEnabled = pushToRemoteEnabled;
         this.pullRequestEnabled = pullRequestEnabled;
+        this.discoveryPrompt = discoveryPrompt;
+        this.refactorPrompt = refactorPrompt;
     }
 
     public boolean isAuthenticated() {
@@ -51,6 +57,8 @@ public record GitRequest(
         private Set<String> allowedExtensions;
         private boolean pushToRemoteEnabled;
         private boolean pullRequestEnabled;
+        private String discoveryPrompt;
+        private String refactorPrompt;
 
         public GitRequestBuilder uri(String uri) {
             this.uri = (uri != null) ? uri : "";
@@ -97,8 +105,21 @@ public record GitRequest(
             return this;
         }
 
+        public GitRequestBuilder discoveryPrompt(String discoveryPrompt) {
+            this.discoveryPrompt = discoveryPrompt;
+            return this;
+        }
+
+        public GitRequestBuilder refactorPrompt(String refactorPrompt) {
+            this.refactorPrompt = refactorPrompt;
+            return this;
+        }
+
         public GitRequest build() {
-            return new GitRequest(uri, base, username, password, commit, filePaths, allowedExtensions, pushToRemoteEnabled, pullRequestEnabled);
+            return new GitRequest(
+                uri, base, username, password, commit, filePaths, allowedExtensions,
+                pushToRemoteEnabled, pullRequestEnabled, discoveryPrompt, refactorPrompt
+            );
         }
     }
 

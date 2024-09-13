@@ -32,8 +32,8 @@ class GitClientTest {
     @BeforeEach
     void setUp() {
         gitClient = new GitClient();
-        validRequest = new GitRequest(VALID_URI, "main", null, null, null, Set.of(File.separator), null, false, false);
-        invalidRequest = new GitRequest(INVALID_URI, "main", null, null, null, Set.of(File.separator), null, false, false);
+        validRequest = new GitRequest(VALID_URI, "main", null, null, null, Set.of(File.separator), null, false, false, "discoveryPrompt", "refactorPrompt");
+        invalidRequest = new GitRequest(INVALID_URI, "main", null, null, null, Set.of(File.separator), null, false, false, "discoveryPrompt", "refactorPrompt");
     }
 
     @AfterEach

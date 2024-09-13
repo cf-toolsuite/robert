@@ -64,7 +64,7 @@ public class SimpleSourceRefactoringService implements RefactoringService {
         sourceMap.forEach((key, value) -> {
             executor.schedule(() -> {
                 log.info("-- Attempting to refactor {}", key);
-                String refactoredValue = refactorSource(value);
+                String refactoredValue = refactorSource(request.refactorPrompt(), value);
                 targetMap.put(key, refactoredValue);
             }, Long.parseLong(delay), TimeUnit.SECONDS);
         });
@@ -88,11 +88,12 @@ public class SimpleSourceRefactoringService implements RefactoringService {
         return new GitResponse(prompt, request.uri(), branchName, pullRequestUrl, targetMap.keySet());
     }
 
-    protected String refactorSource(String source) {
+    protected String refactorSource(String articulation, String source) {
         return chatClient
             .prompt()
             .user(
                 u -> u  .text(prompt)
+                        .param("refactorPrompt", articulation)
                         .param("source", source)
             )
             .call()

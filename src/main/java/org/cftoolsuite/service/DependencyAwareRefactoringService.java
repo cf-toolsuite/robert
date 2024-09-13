@@ -67,12 +67,12 @@ public class DependencyAwareRefactoringService implements RefactoringService {
     protected GitResponse refactor(GitRequest request) throws IOException {
         Repository repo = gitClient.getRepository(request);
         String origin = gitClient.getOrigin(repo);
-
+        String query = seek.replace("{discoveryPrompt}", request.discoveryPrompt());
         List<Document> candidates = CollectionUtils.isEmpty(request.filePaths()) ?
-            store.similaritySearch(SearchRequest.query(seek).withTopK(100)) :
-            store.similaritySearch(SearchRequest.query(seek).withFilterExpression(assembleFilterExpression(request, origin)).withTopK(100));
+            store.similaritySearch(SearchRequest.query(query).withTopK(100)) :
+            store.similaritySearch(SearchRequest.query(query).withFilterExpression(assembleFilterExpression(request, origin)).withTopK(100));
 
-        List<RefactoredSource> refactoredSources = refactor(candidates);
+        List<RefactoredSource> refactoredSources = refactor(request.refactorPrompt(), candidates);
         Map<String, String> targetMap =
             refactoredSources
                 .stream()
@@ -90,7 +90,7 @@ public class DependencyAwareRefactoringService implements RefactoringService {
         return new GitResponse(prompt, request.uri(), branchName, pullRequestUrl, targetMap.keySet());
     }
 
-    protected List<RefactoredSource> refactor(List<Document> candidates) {
+    protected List<RefactoredSource> refactor(String articulation, List<Document> candidates) {
         String documents =
             candidates
                 .stream()
@@ -101,6 +101,7 @@ public class DependencyAwareRefactoringService implements RefactoringService {
                 .prompt()
                 .user(
                     u -> u  .text(prompt)
+                            .param("refactorPrompt", articulation)
                             .param("documents", documents)
                 )
                 .call()
@@ -130,7 +131,14 @@ public class DependencyAwareRefactoringService implements RefactoringService {
                 .flatMap(List::stream)
                 .collect(Collectors.toList());
 
-            result = b.and(b.in("origin", origin), b.in("source", combinedList)).build();
+            // Properly quote the file paths
+            List<String> quotedPaths =
+                combinedList
+                    .stream()
+                    .map(path -> "\"" + path.replace("\\", "\\\\") + "\"")
+                    .collect(Collectors.toList());
+
+            result = b.and(b.in("origin", origin), b.in("source", quotedPaths)).build();
         }
         return result;
     }

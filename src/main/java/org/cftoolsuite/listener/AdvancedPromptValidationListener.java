@@ -17,12 +17,20 @@ public class AdvancedPromptValidationListener implements ApplicationListener<Con
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
+        boolean shutdown = false;
+        String seek = event.getApplicationContext().getBean("seek", String.class);
         String prompt = event.getApplicationContext().getBean("prompt", String.class);
-        log.trace("Prompt: {}", prompt);
-        if (!prompt.contains("{documents}")) {
-            log.error("Prompt must contain {documents} placeholders!  Shutting down.");
-            initiateShutdown(event.getApplicationContext(), 1);
+        log.trace("Discovery prompt: {}", seek);
+        log.trace("Refactor prompt: {}", prompt);
+        if (!seek.contains("{discoveryPrompt}")) {
+            log.error("Discovery prompt must contain {discoveryPrompt} placeholder! Shutting down.");
+            shutdown = true;
         }
+        if (!prompt.contains("{documents}") || !prompt.contains("{refactorPrompt}")) {
+            log.error("Refactor prompt must contain both {refactorPrompt} and {documents} placeholders! Shutting down.");
+            shutdown = true;
+        }
+        if (shutdown) { initiateShutdown(event.getApplicationContext(), 1); }
     }
 
     private void initiateShutdown(ApplicationContext context, int returnCode){

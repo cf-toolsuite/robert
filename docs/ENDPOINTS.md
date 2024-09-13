@@ -13,6 +13,7 @@ Endpoints below work with [GitRequest.java](../src/main/java/org/cftoolsuite/dom
 The minimum required input is:
 
 * `uri` - a remote Git repository, must be accessible via `https` protocol
+* `refactorPrompt` - an articulation of what you would like to be able to refactor within the source
 
 Optional inputs are:
 
@@ -25,6 +26,8 @@ Optional inputs are:
 * `allowedExtensions` - a set of allowed file extensions used for file path filtering purposes; when specified, only `filePaths` containing a file extension in the set of extensions will be considered
 * `pushToRemoteEnabled` - whether or not to git push updates on your local branch to remote; if you've set this value to `true` then you must also supply `username` and `password` values as push operation is authenticated
 * `pullRequestEnabled` - whether or not to file a pull request; if you've set this value to `true` then you must also supply `username` and `password` values as pull request operation is authenticated
+* `discoveryPrompt` - an articulation of what you would like to discover within the source as candidates for refactoring
+  * only required to specified when `advanced` Spring profile is activated
 
 Note: if you're working with a private repository you will be required to supply `username` and `password` values, as clone and push operations will be authenticated
 
@@ -57,10 +60,24 @@ Clones and refactors source
 
 > R*bert clones the remote repository, iterates over a set of file paths, and applies updates to each file based upon criteria in your prompt.  It writes updates to a local branch, and if configured to do so, it will push those updates back to origin.  Note: Refactoring does not take into account dependencies or relationships within the set of file paths.
 
+Example of `refactorPrompt`:
+
+Assume the role and expertise of a Java and Spring developer aware of all projects in the Spring ecosystem and other third-party dependencies.
+You are asked to remove Lombok annotations and replace with equivalent plain Java source.  You are also asked to convert,
+where possible, Class to Record.  If a Class was annotated with Lombok's @Builder annotation, retain builder methods
+of the same signature as one would get with that annotation.  Do not pollute Class to Record conversions with getter and setter methods.
+
+
+Example of `discoveryPrompt`:
+
+Assume the role and expertise of a Java and Spring developer aware of all projects in the Spring ecosystem and other third-party dependencies.
+You are asked to discover all occurrences of Lombok annotations within the Java source repository.  Return the list documents that have at least one occurrence,
+also include documents that have any references to any Lombok annotated type, method, constructor, record, enum or annotation.
+
 **Sample interaction**
 
 ```bash
-❯ http POST :8080/refactor uri=https://github.com/cf-toolsuite/cf-butler.git filePaths:='["org.cftoolsuite.cfapp.domain.accounting.application"]'
+❯ http POST :8080/refactor uri=https://github.com/cf-toolsuite/cf-butler.git filePaths:='["org.cftoolsuite.cfapp.domain.accounting.application"]' refactorPrompt=$refactorPrompt
 
 HTTP/1.1 200
 Connection: keep-alive

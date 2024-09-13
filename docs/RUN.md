@@ -84,15 +84,33 @@ and Gradle project properties, like:
 * `-Pmodel-api-provider=ollama`
 * `-Pvector-db-provider=chroma` or `-Pvector-db-provider=pgvector`
 
-### with alternate prompt
+### with alternate prompts
 
-You may want to override the default, built-in refactoring prompt.  To do that make sure the text of your new prompt contains a `{source}` placeholder, then append, e.g.,
+You may want to override the default, built-in discovery (seek) and refactor (prompt).  Keep in mind that you must add the named placeholders below to your custom prompts!
+
+#### Discovery
+
+Applies only when `advanced` Spring profile is activated
 
 ```bash
--Dprompt="wonderful new prompt that reduces tech debt in your {source}"
+-Dseek="{discoveryPrompt} that finds all the candidates"
 ```
 
-or if you have a sophisticated multi-line prompt you might want to read in the contents this way
+#### Refactor
+
+Simple mode
+
+```bash
+-Dprompt="wonderful new {refactorPrompt} that reduces tech debt in your {source}"
+```
+
+or when the `advanced` Spring profile is activated, it should look a bit like:
+
+```bash
+-Dprompt="awesome new {refactorPrompt} that reduces tech debt in your {documents}"
+```
+
+If you have a sophisticated multi-line prompt you might want to read in the contents this way
 
 ```bash
 -Dprompt="$(cat samples/refactor-lombok-slf4j.st)"
