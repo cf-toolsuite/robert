@@ -118,12 +118,12 @@ public class DependencyAwareRefactoringService implements RefactoringService {
 
             List<String> convertedPackageNamesSrcMainTree = request.filePaths().stream()
                 .filter(path -> path.contains(".") && !path.contains(File.separator))
-                .map(pkg -> String.join(File.separator, "src", "main", "java") + pkg.replace('.', File.separatorChar))
+                .map(pkg -> String.join(File.separator, "src", "main", "java") + File.separator + pkg.replace('.', File.separatorChar))
                 .collect(Collectors.toList());
 
             List<String> convertedPackageNamesSrcTestTree = request.filePaths().stream()
                 .filter(path -> path.contains(".") && !path.contains(File.separator))
-                .map(pkg -> String.join(File.separator, "src", "test", "java") + pkg.replace('.', File.separatorChar))
+                .map(pkg -> String.join(File.separator, "src", "test", "java") + File.separator + pkg.replace('.', File.separatorChar))
                 .collect(Collectors.toList());
 
             List<String> combinedList = Stream.of(slashSeparatedPaths, convertedPackageNamesSrcMainTree, convertedPackageNamesSrcTestTree)

@@ -279,8 +279,8 @@ public class GitClient {
         for (String packageName : packageNames) {
             // Convert package name to file paths (consider src/main/java and src/test/java)
             String[] packagePaths = new String[] {
-                String.join(File.separator, "src", "main", "java") + packageName.replace('.', File.separatorChar),
-                String.join(File.separator, "src", "test", "java") + packageName.replace('.', File.separatorChar)
+                String.join(File.separator, "src", "main", "java") + File.separator + packageName.replace('.', File.separatorChar),
+                String.join(File.separator, "src", "test", "java") + File.separator + packageName.replace('.', File.separatorChar)
             };
             for (String packagePath : packagePaths) {
                 // Use TreeWalk to find all .java files in the package
