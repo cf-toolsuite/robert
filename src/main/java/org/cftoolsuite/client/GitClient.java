@@ -148,11 +148,10 @@ public class GitClient {
                 log.info("-- Obtaining contents of {}", path);
                 String contents = new String(bytes, StandardCharsets.UTF_8);
                 result.put(path, contents);
-                return result;
             } else {
-                throw new IllegalArgumentException(
-                        String.format("No file found for commitId=%s and filePath=%s", commit, filePath));
+                log.warn("-- No file found for commitId={} and filePath={}", commit, filePath);
             }
+            return result;
         }
     }
 
@@ -213,8 +212,8 @@ public class GitClient {
             Optional
                 .of(path)
                 .filter(p -> Stream.of(
-                    p.contains(".") && !p.contains("/"),
-                    p.contains("/")
+                    p.contains(".") && !p.contains(File.separator),
+                    p.contains(File.separator)
                 ).anyMatch(Boolean::booleanValue))
                 .map(p -> true)
                 .orElseGet(() -> {
@@ -278,22 +277,27 @@ public class GitClient {
         RevCommit revision = repo.parseCommit(commitId);
         // Iterate over each package name
         for (String packageName : packageNames) {
-            // Convert package name to file path
-            String packagePath = "src/main/java/" + packageName.replace('.', '/');
-            // Use TreeWalk to find all .java files in the package
-            try (TreeWalk treeWalk = new TreeWalk(repo)) {
-                treeWalk.addTree(revision.getTree());
-                treeWalk.setRecursive(true);
-                while (treeWalk.next()) {
-                    String path = treeWalk.getPathString();
-                    // Check if the file is in the desired package and is a .java file
-                    if (path.startsWith(packagePath) && path.endsWith(".java")) {
-                        log.info("-- Obtaining contents of {}", path);
-                        // Read the file contents
-                        byte[] bytes = repo.open(treeWalk.getObjectId(0)).getBytes();
-                        String fileContent = new String(bytes, StandardCharsets.UTF_8);
-                        // Store the file path and content in the map
-                        result.put(path, fileContent);
+            // Convert package name to file paths (consider src/main/java and src/test/java)
+            String[] packagePaths = new String[] {
+                String.join(File.separator, "src", "main", "java") + packageName.replace('.', File.separatorChar),
+                String.join(File.separator, "src", "test", "java") + packageName.replace('.', File.separatorChar)
+            };
+            for (String packagePath : packagePaths) {
+                // Use TreeWalk to find all .java files in the package
+                try (TreeWalk treeWalk = new TreeWalk(repo)) {
+                    treeWalk.addTree(revision.getTree());
+                    treeWalk.setRecursive(true);
+                    while (treeWalk.next()) {
+                        String path = treeWalk.getPathString();
+                        // Check if the file is in the desired package and is a .java file
+                        if (path.startsWith(packagePath) && path.endsWith(".java")) {
+                            log.info("-- Obtaining contents of {}", path);
+                            // Read the file contents
+                            byte[] bytes = repo.open(treeWalk.getObjectId(0)).getBytes();
+                            String fileContent = new String(bytes, StandardCharsets.UTF_8);
+                            // Store the file path and content in the map
+                            result.put(path, fileContent);
+                        }
                     }
                 }
             }

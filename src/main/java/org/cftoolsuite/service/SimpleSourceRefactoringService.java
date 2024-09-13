@@ -91,8 +91,10 @@ public class SimpleSourceRefactoringService implements RefactoringService {
     protected String refactorSource(String source) {
         return chatClient
             .prompt()
-            .user(u -> u.text(prompt)
-            .param("source", source))
+            .user(
+                u -> u  .text(prompt)
+                        .param("source", source)
+            )
             .call()
             .content();
     }

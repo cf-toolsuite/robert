@@ -32,8 +32,8 @@ class GitClientTest {
     @BeforeEach
     void setUp() {
         gitClient = new GitClient();
-        validRequest = new GitRequest(VALID_URI, "main", null, null, null, Set.of("/"), null, false, false);
-        invalidRequest = new GitRequest(INVALID_URI, "main", null, null, null, Set.of("/"), null, false, false);
+        validRequest = new GitRequest(VALID_URI, "main", null, null, null, Set.of(File.separator), null, false, false);
+        invalidRequest = new GitRequest(INVALID_URI, "main", null, null, null, Set.of(File.separator), null, false, false);
     }
 
     @AfterEach
@@ -93,9 +93,8 @@ class GitClientTest {
     void testReadFile_FileNotFound() throws Exception {
         Repository repo = gitClient.getRepository(validRequest);
         RevCommit latestCommit = gitClient.getLatestCommit(repo);
-        assertThatThrownBy(() -> gitClient.readFile(repo, "NonExistentFile.txt", latestCommit.getName()))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("No file found for commitId");
+        Map<String, String> fileContent = gitClient.readFile(repo, "NonExistentFile.txt", latestCommit.getName());
+        assertThat(fileContent).isEmpty();
     }
 
     @Test

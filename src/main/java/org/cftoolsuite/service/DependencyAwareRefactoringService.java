@@ -1,5 +1,6 @@
 package org.cftoolsuite.service;
 
+import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -7,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.cftoolsuite.client.GitClient;
 import org.cftoolsuite.client.GitOperationException;
@@ -64,10 +66,11 @@ public class DependencyAwareRefactoringService implements RefactoringService {
 
     protected GitResponse refactor(GitRequest request) throws IOException {
         Repository repo = gitClient.getRepository(request);
+        String origin = gitClient.getOrigin(repo);
 
         List<Document> candidates = CollectionUtils.isEmpty(request.filePaths()) ?
             store.similaritySearch(SearchRequest.query(seek).withTopK(100)) :
-            store.similaritySearch(SearchRequest.query(seek).withFilterExpression(assembleFilterExpression(request)).withTopK(100));
+            store.similaritySearch(SearchRequest.query(seek).withFilterExpression(assembleFilterExpression(request, origin)).withTopK(100));
 
         List<RefactoredSource> refactoredSources = refactor(candidates);
         Map<String, String> targetMap =
@@ -93,28 +96,41 @@ public class DependencyAwareRefactoringService implements RefactoringService {
                 .stream()
                     .map(d -> String.format("filePath: %s\nsource: %s", d.getMetadata().get("source"), d.getContent()))
                     .collect(Collectors.joining("\n\n"));
-        return chatClient
-            .prompt()
-            .user(u -> u.text(prompt)
-            .param("documents", documents))
-            .call()
-            .entity(new ParameterizedTypeReference<List<RefactoredSource>>() {});
+        return
+            chatClient
+                .prompt()
+                .user(
+                    u -> u  .text(prompt)
+                            .param("documents", documents)
+                )
+                .call()
+                .entity(new ParameterizedTypeReference<List<RefactoredSource>>() {});
     }
 
-    private Filter.Expression assembleFilterExpression(GitRequest request) {
+    private Filter.Expression assembleFilterExpression(GitRequest request, String origin) {
         FilterExpressionBuilder b = new FilterExpressionBuilder();
         Filter.Expression result = null;
+
         if (!CollectionUtils.isEmpty(request.filePaths())) {
             List<String> slashSeparatedPaths = request.filePaths().stream()
-                .filter(path -> path.contains("/") && !path.contains("."))
+                .filter(path -> path.contains(File.separator) && !path.contains("."))
                 .collect(Collectors.toList());
 
-            List<String> convertedPackageNames = request.filePaths().stream()
-                .filter(path -> path.contains(".") && !path.contains("/"))
-                .map(pkg -> "src/main/java/" + pkg.replace('.', '/'))
+            List<String> convertedPackageNamesSrcMainTree = request.filePaths().stream()
+                .filter(path -> path.contains(".") && !path.contains(File.separator))
+                .map(pkg -> String.join(File.separator, "src", "main", "java") + pkg.replace('.', File.separatorChar))
                 .collect(Collectors.toList());
 
-            result = b.or(b.in("source", slashSeparatedPaths), b.in("source", convertedPackageNames)).build();
+            List<String> convertedPackageNamesSrcTestTree = request.filePaths().stream()
+                .filter(path -> path.contains(".") && !path.contains(File.separator))
+                .map(pkg -> String.join(File.separator, "src", "test", "java") + pkg.replace('.', File.separatorChar))
+                .collect(Collectors.toList());
+
+            List<String> combinedList = Stream.of(slashSeparatedPaths, convertedPackageNamesSrcMainTree, convertedPackageNamesSrcTestTree)
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+
+            result = b.and(b.in("origin", origin), b.in("source", combinedList)).build();
         }
         return result;
     }
