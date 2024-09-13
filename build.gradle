@@ -42,7 +42,7 @@ dependencies {
     	implementation 'org.springframework.ai:spring-ai-postgresml-spring-boot-starter'
 	}
 	implementation 'org.apache.commons:commons-lang3'
-	implementation 'com.github.javaparser:javaparser-core-serialization:3.26.1'
+	implementation 'com.github.javaparser:javaparser-core-serialization:3.26.2'
 	implementation 'org.eclipse.jgit:org.eclipse.jgit:7.0.0.202409031743-r'
 	implementation 'org.kohsuke:github-api:1.324'
 	implementation ('org.gitlab4j:gitlab4j-api:5.6.0') {
