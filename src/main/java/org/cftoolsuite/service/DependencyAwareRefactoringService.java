@@ -158,12 +158,7 @@ public class DependencyAwareRefactoringService implements RefactoringService {
     private Filter.Expression assembleFilterExpression(GitRequest request, String origin, String latestCommit) {
         FilterExpressionBuilder b = new FilterExpressionBuilder();
         String commit = StringUtils.isBlank(request.commit()) ? latestCommit : request.commit();
-        Set<String> fileExtensions =
-            request
-                .allowedExtensions()
-                .stream()
-                .map(path -> "\"" + path.replace("\\", "\\\\") + "\"")
-                .collect(Collectors.toSet());
+        Object[] fileExtensions = request.allowedExtensions().toArray(String[]::new);
         return
             b.and(
                 b.and(
