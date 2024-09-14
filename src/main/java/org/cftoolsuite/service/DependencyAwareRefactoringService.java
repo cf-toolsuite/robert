@@ -4,12 +4,15 @@ import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
 import org.cftoolsuite.client.GitClient;
 import org.cftoolsuite.client.GitOperationException;
 import org.cftoolsuite.client.PullRequestClientFactory;
@@ -66,17 +69,13 @@ public class DependencyAwareRefactoringService implements RefactoringService {
 
     protected GitResponse refactor(GitRequest request) throws IOException {
         Repository repo = gitClient.getRepository(request);
-        String origin = gitClient.getOrigin(repo);
-        String query = seek.replace("{discoveryPrompt}", request.discoveryPrompt());
-        List<Document> candidates = CollectionUtils.isEmpty(request.filePaths()) ?
-            store.similaritySearch(SearchRequest.query(query).withTopK(100)) :
-            store.similaritySearch(SearchRequest.query(query).withFilterExpression(assembleFilterExpression(request, origin)).withTopK(100));
+        List<Document> candidates = search(repo, request);
 
         List<RefactoredSource> refactoredSources = refactor(request.refactorPrompt(), candidates);
         Map<String, String> targetMap =
-            refactoredSources
+        refactoredSources
                 .stream()
-                    .collect(Collectors.toMap(RefactoredSource::filePath, RefactoredSource::content));
+                .collect(Collectors.toMap(RefactoredSource::filePath, RefactoredSource::content));
 
         String branchName = "refactor-" + UUID.randomUUID().toString();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -88,6 +87,29 @@ public class DependencyAwareRefactoringService implements RefactoringService {
         String pullRequestUrl = pullRequestClientFactory.get(request.uri()).pr(repo, request, branchName, commitMessage);
 
         return new GitResponse(prompt, request.uri(), branchName, pullRequestUrl, targetMap.keySet());
+    }
+
+    // ALERT: Open issues in spring-ai to watch
+    // @see https://github.com/spring-projects/spring-ai/issues/328
+    // @see https://github.com/spring-projects/spring-ai/pull/1227
+    protected List<Document> search(Repository repo, GitRequest request) throws IOException {
+        String origin = gitClient.getOrigin(repo);
+        String latestCommit = gitClient.getLatestCommit(repo).getId().name();
+        String query = seek.replace("{discoveryPrompt}", request.discoveryPrompt());
+        List<Document> candidates = store.similaritySearch(SearchRequest.query(query).withFilterExpression(assembleFilterExpression(request, origin, latestCommit)).withTopK(100));;
+        List<Document> result = candidates;
+        if (!CollectionUtils.isEmpty(request.filePaths())) {
+            // Get the list of paths
+            List<String> filterPaths = pathsLike(request);
+            // Apply the filter
+            result = candidates.stream()
+                .filter(doc -> {
+                    String source = (String) doc.getMetadata().get("source");
+                    return source != null && filterPaths.stream().anyMatch(path -> source.startsWith(path));
+                })
+                .collect(Collectors.toList());
+        }
+        return result;
     }
 
     protected List<RefactoredSource> refactor(String articulation, List<Document> candidates) {
@@ -108,10 +130,7 @@ public class DependencyAwareRefactoringService implements RefactoringService {
                 .entity(new ParameterizedTypeReference<List<RefactoredSource>>() {});
     }
 
-    private Filter.Expression assembleFilterExpression(GitRequest request, String origin) {
-        FilterExpressionBuilder b = new FilterExpressionBuilder();
-        Filter.Expression result = null;
-
+    private List<String> pathsLike(GitRequest request) {
         if (!CollectionUtils.isEmpty(request.filePaths())) {
             List<String> slashSeparatedPaths = request.filePaths().stream()
                 .filter(path -> path.contains(File.separator) && !path.contains("."))
@@ -131,15 +150,27 @@ public class DependencyAwareRefactoringService implements RefactoringService {
                 .flatMap(List::stream)
                 .collect(Collectors.toList());
 
-            // Properly quote the file paths
-            List<String> quotedPaths =
-                combinedList
-                    .stream()
-                    .map(path -> "\"" + path.replace("\\", "\\\\") + "\"")
-                    .collect(Collectors.toList());
-
-            result = b.and(b.in("origin", origin), b.in("source", quotedPaths)).build();
+            return combinedList;
         }
-        return result;
+        return Collections.emptyList();
+    }
+
+    private Filter.Expression assembleFilterExpression(GitRequest request, String origin, String latestCommit) {
+        FilterExpressionBuilder b = new FilterExpressionBuilder();
+        String commit = StringUtils.isBlank(request.commit()) ? latestCommit : request.commit();
+        Set<String> fileExtensions =
+            request
+                .allowedExtensions()
+                .stream()
+                .map(path -> "\"" + path.replace("\\", "\\\\") + "\"")
+                .collect(Collectors.toSet());
+        return
+            b.and(
+                b.and(
+                    b.eq("commit", commit), b.eq("origin", origin)
+                ),
+                b.in("file-extension", fileExtensions)
+            )
+            .build();
     }
 }

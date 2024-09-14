@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.cftoolsuite.client.GitClient;
 import org.cftoolsuite.domain.GitRequest;
 import org.cftoolsuite.domain.IngestRequest;
@@ -35,6 +36,7 @@ public class GitRepositoryIngester {
     public void ingest(IngestRequest request) throws IOException {
         GitRequest gitRequest = GitRequest.builder().uri(request.uri()).username(request.username()).password(request.password()).commit(request.commit()).build();
         Repository repo = client.getRepository(gitRequest);
+        String latestCommit = client.getLatestCommit(repo).getId().name();
         Map<String, String> fileMap = client.readFiles(repo, null, null, gitRequest.commit());
         String origin = client.getOrigin(repo);
         List<Document> documents =
@@ -43,7 +45,14 @@ public class GitRepositoryIngester {
                     .stream()
                         .map(entry -> {
                             log.info("-- Ingesting file: {}", entry.getKey());
-                            Map<String, Object> customMetadata = Map.of("source", entry.getKey(), "charset", StandardCharsets.UTF_8, "origin", origin);
+                            Map<String, Object> customMetadata =
+                                Map.of(
+                                    "origin", origin,
+                                    "commit", StringUtils.isBlank(gitRequest.commit()) ? latestCommit : gitRequest.commit(),
+                                    "source", entry.getKey(),
+                                    "file-extension", entry.getKey().contains(".") ? entry.getKey().substring(entry.getKey().lastIndexOf('.') + 1): "",
+                                    "charset", StandardCharsets.UTF_8
+                                );
                             return new Document(entry.getValue(), customMetadata);
                         })
                         .collect(Collectors.toList());
