@@ -23,6 +23,8 @@ Optional inputs are:
   * if you have a Github account, then this value should be set to a classic [personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic) with full `repo` permissions.
 * `commit` - a commit hash, if not supplied the latest commit on origin/main is used
 * `filePaths` - either a set of relative file paths from the root of the repository or a set of package names
+  * used to constrain the set of files under consideration for refactoring
+  * not applicable when `advanced` Spring profile is activated
 * `allowedExtensions` - a set of allowed file extensions used for file path filtering purposes; when specified, only `filePaths` containing a file extension in the set of extensions will be considered
 * `pushToRemoteEnabled` - whether or not to git push updates on your local branch to remote; if you've set this value to `true` then you must also supply `username` and `password` values as push operation is authenticated
 * `pullRequestEnabled` - whether or not to file a pull request; if you've set this value to `true` then you must also supply `username` and `password` values as pull request operation is authenticated
@@ -63,16 +65,16 @@ Clones and refactors source
 Example of `refactorPrompt`:
 
 Assume the role and expertise of a Java and Spring developer aware of all projects in the Spring ecosystem and other third-party dependencies.
-You are asked to remove Lombok annotations and replace with equivalent plain Java source.  You are also asked to convert,
-where possible, Class to Record.  If a Class was annotated with Lombok's @Builder annotation, retain builder methods
-of the same signature as one would get with that annotation.  Do not pollute Class to Record conversions with getter and setter methods.
-
+You are asked to remove Lombok annotations and replace with equivalent plain Java source.
+You are also asked to convert, where possible, Class to Record, but only if the Class was annotated with Lombok's @Builder annotation.
+In that case be sure to retain builder methods of the same signature as one would get with that annotation.
+Do not pollute Class to Record conversions with getter and setter methods.
 
 Example of `discoveryPrompt`:
 
 Assume the role and expertise of a Java and Spring developer aware of all projects in the Spring ecosystem and other third-party dependencies.
-You are asked to discover all occurrences of Lombok annotations within the Java source repository.  Return the list documents that have at least one occurrence,
-also include documents that have any references to any Lombok annotated type, method, constructor, record, enum or annotation.
+You are asked to discover all occurrences of Lombok annotations within the Java source repository.
+Return the list documents that have at least one occurrence.
 
 **Sample interaction**
 

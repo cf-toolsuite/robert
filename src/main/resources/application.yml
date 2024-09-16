@@ -111,6 +111,23 @@ spring:
 spring:
   config:
     activate:
+      on-profile: openai
+    import: "optional:file:./config/creds.yml"
+
+  ai:
+    openai:
+      chat:
+        options:
+          model: ${CHAT_MODEL:gpt4o-0806-loco-vm}
+      embedding:
+        options:
+          model: ${EMBEDDING_MODEL:text-embedding-3-large}
+
+---
+
+spring:
+  config:
+    activate:
       on-profile: ollama
 
   autoconfigure:

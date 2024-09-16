@@ -1,16 +1,13 @@
 package org.cftoolsuite.service;
 
-import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.cftoolsuite.client.GitClient;
@@ -33,7 +30,7 @@ import org.springframework.util.CollectionUtils;
 
 public class DependencyAwareRefactoringService implements RefactoringService {
 
-    private static final Logger log = LoggerFactory.getLogger(SimpleSourceRefactoringService.class);
+    private static final Logger log = LoggerFactory.getLogger(DependencyAwareRefactoringService.class);
 
     private final ChatClient chatClient;
     private final String seek;
@@ -68,8 +65,14 @@ public class DependencyAwareRefactoringService implements RefactoringService {
     }
 
     protected GitResponse refactor(GitRequest request) throws IOException {
+        String prompt = String.join("\n\n", "Discovery prompt:", request.discoveryPrompt(), "Refactor prompt:", request.refactorPrompt());
         Repository repo = gitClient.getRepository(request);
         List<Document> candidates = search(repo, request);
+
+        if (CollectionUtils.isEmpty(candidates)) {
+            log.info("No candidates found for refactoring.");
+            return new GitResponse(prompt, request.uri(), null, null, Collections.emptySet());
+        }
 
         List<RefactoredSource> refactoredSources = refactor(request.refactorPrompt(), candidates);
         Map<String, String> targetMap =
@@ -96,27 +99,16 @@ public class DependencyAwareRefactoringService implements RefactoringService {
         String origin = gitClient.getOrigin(repo);
         String latestCommit = gitClient.getLatestCommit(repo).getId().name();
         String query = seek.replace("{discoveryPrompt}", request.discoveryPrompt());
-        List<Document> candidates = store.similaritySearch(SearchRequest.query(query).withFilterExpression(assembleFilterExpression(request, origin, latestCommit)).withTopK(100));;
-        List<Document> result = candidates;
-        if (!CollectionUtils.isEmpty(request.filePaths())) {
-            // Get the list of paths
-            List<String> filterPaths = pathsLike(request);
-            // Apply the filter
-            result = candidates.stream()
-                .filter(doc -> {
-                    String source = (String) doc.getMetadata().get("source");
-                    return source != null && filterPaths.stream().anyMatch(path -> source.startsWith(path));
-                })
-                .collect(Collectors.toList());
-        }
-        return result;
+        List<Document> candidates = store.similaritySearch(SearchRequest.query(query).withFilterExpression(assembleFilterExpression(request, origin, latestCommit)).withTopK(250));;
+        log.trace("Refactor candidates are: {}", candidates);
+        return candidates;
     }
 
     protected List<RefactoredSource> refactor(String articulation, List<Document> candidates) {
         String documents =
             candidates
                 .stream()
-                    .map(d -> String.format("filePath: %s\nsource: %s", d.getMetadata().get("source"), d.getContent()))
+                    .map(d -> String.format("filePath: %s\ncontent: %s", d.getMetadata().get("source"), d.getContent()))
                     .collect(Collectors.joining("\n\n"));
         return
             chatClient
@@ -128,31 +120,6 @@ public class DependencyAwareRefactoringService implements RefactoringService {
                 )
                 .call()
                 .entity(new ParameterizedTypeReference<List<RefactoredSource>>() {});
-    }
-
-    private List<String> pathsLike(GitRequest request) {
-        if (!CollectionUtils.isEmpty(request.filePaths())) {
-            List<String> slashSeparatedPaths = request.filePaths().stream()
-                .filter(path -> path.contains(File.separator) && !path.contains("."))
-                .collect(Collectors.toList());
-
-            List<String> convertedPackageNamesSrcMainTree = request.filePaths().stream()
-                .filter(path -> path.contains(".") && !path.contains(File.separator))
-                .map(pkg -> String.join(File.separator, "src", "main", "java") + File.separator + pkg.replace('.', File.separatorChar))
-                .collect(Collectors.toList());
-
-            List<String> convertedPackageNamesSrcTestTree = request.filePaths().stream()
-                .filter(path -> path.contains(".") && !path.contains(File.separator))
-                .map(pkg -> String.join(File.separator, "src", "test", "java") + File.separator + pkg.replace('.', File.separatorChar))
-                .collect(Collectors.toList());
-
-            List<String> combinedList = Stream.of(slashSeparatedPaths, convertedPackageNamesSrcMainTree, convertedPackageNamesSrcTestTree)
-                .flatMap(List::stream)
-                .collect(Collectors.toList());
-
-            return combinedList;
-        }
-        return Collections.emptyList();
     }
 
     private Filter.Expression assembleFilterExpression(GitRequest request, String origin, String latestCommit) {

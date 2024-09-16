@@ -13,9 +13,9 @@ Both modes work with a [ChatModel](https://docs.spring.io/spring-ai/reference/ap
 
 ## How to Run with Gradle
 
-### with Groq Cloud
+### with OpenAI
 
-Build and run a version of the utility that is compatible for use with [Groq Cloud](https://groq.com).  You will need to [obtain an API key](https://console.groq.com/docs/api-keys).
+Build and run a version of the utility that is compatible for use with [OpenAI](https://openai.com).  You will need to [obtain an API key](https://platform.openai.com/settings/profile?tab=api-keys).
 
 Before launching the app:
 
@@ -28,6 +28,33 @@ spring:
       api-key: {REDACTED}
 ```
 > Replace `{REDACTED}` above with your Groq Cloud API key
+
+Open a terminal shell and execute
+
+```bash
+./gradlew bootRun
+```
+
+### with Groq Cloud
+
+Build and run a version of the utility that is compatible for use with [Groq Cloud](https://groq.com).  You will need to [obtain an API key](https://console.groq.com/keys).
+Note that Groq does not currently have support for text embedding. So if you intend to run with the `advanced` Spring profile activated, you will also need to provide additional credentials
+
+Before launching the app:
+
+* Create a `config` folder which would be a sibling of the `build` folder.  Create a file named `creds.yml` inside that folder.  Add your own API key into that file.
+
+```yaml
+spring:
+  ai:
+    openai:
+      api-key: {REDACTED-1}
+      # Embedding configuration below only required when spring.profiles.active includes "advanced"
+      embedding:
+        api-key: {REDACTED-2}
+        base_url: https://api.openai.com
+```
+> Replace `{REDACTED-1}` and `{REDACTED-2}` above with your Groq Cloud API and OpenAPI keys respectively.
 
 Open a terminal shell and execute
 

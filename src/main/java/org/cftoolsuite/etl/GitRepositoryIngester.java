@@ -34,10 +34,18 @@ public class GitRepositoryIngester {
     }
 
     public void ingest(IngestRequest request) throws IOException {
-        GitRequest gitRequest = GitRequest.builder().uri(request.uri()).username(request.username()).password(request.password()).commit(request.commit()).build();
+        GitRequest gitRequest =
+            GitRequest
+                .builder()
+                .uri(request.uri())
+                .username(request.username())
+                .password(request.password())
+                .commit(request.commit())
+                .allowedExtensions(request.allowedExtensions())
+                .build();
         Repository repo = client.getRepository(gitRequest);
         String latestCommit = client.getLatestCommit(repo).getId().name();
-        Map<String, String> fileMap = client.readFiles(repo, null, null, gitRequest.commit());
+        Map<String, String> fileMap = client.readFiles(repo, null, gitRequest.allowedExtensions(), gitRequest.commit());
         String origin = client.getOrigin(repo);
         List<Document> documents =
             fileMap

@@ -3,6 +3,7 @@ package org.cftoolsuite.service;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -19,6 +20,7 @@ import org.eclipse.jgit.lib.Repository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.util.CollectionUtils;
 
 public class SimpleSourceRefactoringService implements RefactoringService {
 
@@ -58,6 +60,12 @@ public class SimpleSourceRefactoringService implements RefactoringService {
         Map<String, String> sourceMap = gitClient.readFiles(repo, request.filePaths(), request.allowedExtensions(), request.commit());
 
         log.info("Found {} files to refactor.", sourceMap.size());
+
+        if (CollectionUtils.isEmpty(sourceMap)) {
+            log.info("No candidates found for refactoring.");
+            return new GitResponse(prompt, request.uri(), null, null, Collections.emptySet());
+        }
+
         Map<String, String> targetMap = new HashMap<>();
 
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);

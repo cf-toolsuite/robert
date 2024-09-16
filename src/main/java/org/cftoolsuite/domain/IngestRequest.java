@@ -1,22 +1,28 @@
 package org.cftoolsuite.domain;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.commons.lang3.StringUtils;
 
 public record IngestRequest(
         String uri,
         String username,
         String password,
-        String commit) {
+        String commit,
+        Set<String> allowedExtensions) {
 
     public IngestRequest(
             String uri,
             String username,
             String password,
-            String commit) {
+            String commit,
+            Set<String> allowedExtensions) {
         this.uri = (uri != null) ? uri : "";
         this.username = username;
         this.password = (password != null) ? password : "";
         this.commit = (commit != null) ? commit : "";
+        this.allowedExtensions = (allowedExtensions != null) ? allowedExtensions : new HashSet<>();
     }
 
     public boolean isAuthenticated() {
@@ -28,6 +34,7 @@ public record IngestRequest(
         private String username;
         private String password;
         private String commit;
+        private Set<String> allowedExtensions;
 
         public IngestRequestBuilder uri(String uri) {
             this.uri = (uri != null) ? uri : "";
@@ -49,8 +56,13 @@ public record IngestRequest(
             return this;
         }
 
+        public IngestRequestBuilder allowedExtensions(Set<String> allowedExtensions) {
+            this.allowedExtensions = (allowedExtensions != null) ? allowedExtensions : new HashSet<>();
+            return this;
+        }
+
         public IngestRequest build() {
-            return new IngestRequest(uri, username, password, commit);
+            return new IngestRequest(uri, username, password, commit, allowedExtensions);
         }
     }
 
