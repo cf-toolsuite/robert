@@ -118,7 +118,7 @@ spring:
     openai:
       chat:
         options:
-          model: ${CHAT_MODEL:gpt4o-0806-loco-vm}
+          model: ${CHAT_MODEL:gpt-4o-mini}
       embedding:
         options:
           model: ${EMBEDDING_MODEL:text-embedding-3-large}
@@ -196,7 +196,8 @@ spring:
         initialize-schema: true
         index-type: HNSW
         distance-type: COSINE_DISTANCE
-        dimensions: 1536
+        dimensions: ${SPRING_AI_VECTORSTORE_PGVECTOR_DIMENSIONS:768}
+
 
   docker:
     compose:
@@ -243,6 +244,11 @@ spring:
     activate:
       on-profile: dev
 
+  ai:
+    vectorstore:
+      pgvector:
+        remove-existing-vector-store-table: true
+
 debug: true
 
 management:
@@ -250,3 +256,7 @@ management:
     web:
       exposure:
         include: "*"
+
+logging:
+  level:
+    org.cftoolsuite: TRACE

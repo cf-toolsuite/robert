@@ -65,7 +65,7 @@ public class DependencyAwareRefactoringService implements RefactoringService {
     }
 
     protected GitResponse refactor(GitRequest request) throws IOException {
-        String prompt = String.join("\n\n", "Discovery prompt:", request.discoveryPrompt(), "Refactor prompt:", request.refactorPrompt());
+        String prompt = String.join(System.lineSeparator() + System.lineSeparator(), "Discovery prompt:", request.discoveryPrompt(), "Refactor prompt:", request.refactorPrompt());
         Repository repo = gitClient.getRepository(request);
         List<Document> candidates = search(repo, request);
 
@@ -108,8 +108,8 @@ public class DependencyAwareRefactoringService implements RefactoringService {
         String documents =
             candidates
                 .stream()
-                    .map(d -> String.format("filePath: %s\ncontent: %s", d.getMetadata().get("source"), d.getContent()))
-                    .collect(Collectors.joining("\n\n"));
+                    .map(d -> String.format("filePath: %s%ncontent: %s", d.getMetadata().get("source"), d.getContent()))
+                    .collect(Collectors.joining(System.lineSeparator() + System.lineSeparator()));
         return
             chatClient
                 .prompt()
