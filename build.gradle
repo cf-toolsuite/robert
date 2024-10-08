@@ -42,6 +42,8 @@ dependencies {
 	if (project.hasProperty('embedding-model-provider') && project.getProperty('embedding-model-provider') == 'postgresml') {
     	implementation 'org.springframework.ai:spring-ai-postgresml-spring-boot-starter'
 	}
+	implementation 'io.pivotal.cfenv:java-cfenv-all:3.2.0'
+	implementation 'org.springframework.cloud:spring-cloud-bindings:2.0.3'
 	implementation 'org.apache.commons:commons-lang3'
 	implementation 'com.github.javaparser:javaparser-core-serialization:3.26.2'
 	implementation 'org.eclipse.jgit:org.eclipse.jgit:7.0.0.202409031743-r'
