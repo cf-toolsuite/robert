@@ -36,6 +36,15 @@ public class Advanced {
     }
 
     @Bean
+    public String dependenciesManagementStanza() {
+        return
+            """
+            Take note of any dependent relationships in source.
+            Update method calls in modified source if appropriate.
+            """;
+    }
+
+    @Bean
     public String seek(
         @Value("#{systemProperties['seek'] ?: ''}") String seek,
         @Value("classpath:ai/advanced-seek-request.st") Resource defaultSeek) throws IOException {
@@ -43,17 +52,19 @@ public class Advanced {
     }
 
     @Bean
-    @DependsOn({"prompt", "seek"})
+    @DependsOn({"prompt", "seek", "dependenciesManagementStanza"})
     @Description("A sophisticated implementation of a function that returns refactoring results.")
     public RefactoringService refactoringService(
         ChatModel model,
         String seek,
         String prompt,
+        String dependenciesManagementStanza,
         GitClient gitClient,
+        @Value("#{systemProperties['tpmDelay'] ?: '5'}") String tpmDelay,
         PullRequestClientFactory pullRequestClientFactory,
         VectorStore store) {
         return new DependencyAwareRefactoringService(
-            ChatClient.builder(model).build(), seek, prompt, gitClient, pullRequestClientFactory, store);
+            ChatClient.builder(model).build(), seek, prompt, dependenciesManagementStanza, gitClient, tpmDelay, pullRequestClientFactory, store);
     }
 
     @Bean

@@ -2,22 +2,12 @@
 
 ## How to Build
 
-### Simple
-
-```bash
-./gradlew clean build
-```
-This builds a version of the utility that is compatible for use with any [Open AI](https://openai.com) compatible API including [Groq Cloud](https://groq.com).
-
-
-### Advanced
-
 The options below represent the collection of Gradle [conditional dependencies](https://www.baeldung.com/gradle-conditional-dependencies#configuring-conditional-dependency) available in [build.gradle](../build.gradle).  These dependencies will be packaged in the resulting executable JAR.
 
 > Note that a `developmentOnly` scoped dependency on [spring-boot-docker-compose](https://docs.spring.io/spring-boot/reference/features/dev-services.html#features.dev-services.docker-compose) is added to facilitate lifecycle management of Model API providers.
 
 
-#### [Chroma](https://docs.trychroma.com/guides)
+### [Chroma](https://docs.trychroma.com/guides)
 
 Adds dependency on:
 
@@ -30,7 +20,7 @@ Adds dependency on:
 > You also have the option of building with `-Pmodel-api-provider=ollama` which adds a dependency on [spring-ai-ollama-spring-boot-starter](https://docs.spring.io/spring-ai/reference/api/chat/ollama-chat.html).  Work with [your choice](https://github.com/ollama/ollama?tab=readme-ov-file#model-library) of Ollama LLMs.
 
 
-#### [PgVector](https://github.com/pgvector/pgvector)
+### [PgVector](https://github.com/pgvector/pgvector)
 
 Adds dependency on:
 

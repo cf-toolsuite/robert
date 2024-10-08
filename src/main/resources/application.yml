@@ -1,7 +1,4 @@
 spring:
-  profiles:
-    active: default,groq-cloud
-
   application:
     name: robert
 
@@ -150,7 +147,7 @@ spring:
 spring:
   config:
     activate:
-      on-profile: advanced
+      on-profile: docker
 
   docker:
     compose:
@@ -202,40 +199,6 @@ spring:
   docker:
     compose:
       file: ./docker-compose.pgvector.yml
-
----
-
-spring:
-  config:
-    activate:
-      on-profile: postgresml
-
-  datasource:
-    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:org.postgresql.Driver}
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/postgres}
-    username: ${SPRING_DATASOURCE_USER:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:""}
-
-  ai:
-    openai:
-      embedding:
-        enabled: false
-    vectorstore:
-      pgvector:
-        initialize-schema: true
-        remove-existing-vector-store-table: true
-        index-type: none
-        distance-type: COSINE_DISTANCE
-        dimensions: 4096
-    postgresml:
-      embedding:
-        options:
-          kwargs:
-            device: cpu
-
-  docker:
-    compose:
-      file: ./docker-compose.postgresml.yml
 
 ---
 

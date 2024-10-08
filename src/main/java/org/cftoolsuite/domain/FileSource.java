@@ -1,10 +1,10 @@
 package org.cftoolsuite.domain;
 
-public record RefactoredSource (
+public record FileSource (
     String filePath,
     String content) {
 
-    public RefactoredSource(
+    public FileSource(
         String filePath,
         String content) {
         this.filePath = filePath;

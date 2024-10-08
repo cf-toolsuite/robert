@@ -53,7 +53,7 @@ spring:
 Open a terminal shell and execute
 
 ```bash
-./gradlew bootRun
+./gradlew build bootRun -Dspring.profiles.active=openai
 ```
 
 ### with Groq Cloud
@@ -80,7 +80,7 @@ spring:
 Open a terminal shell and execute
 
 ```bash
-./gradlew bootRun
+./gradlew build bootRun -Dspring.profiles.active=groq-cloud
 ```
 
 ### with Ollama
@@ -109,21 +109,20 @@ This setup leverages Spring Boot's support for Docker Compose and launches eithe
 #### Chroma
 
 ```bash
-./gradlew build bootRun -Dspring.profiles.active=advanced,groq-cloud,chroma -Pvector-db-provider=chroma
+./gradlew build bootRun -Dspring.profiles.active=docker,groq-cloud,chroma -Pvector-db-provider=chroma
 ```
 > You also have the option of building with `-Pmodel-api-provider=ollama` then replacing `groq-cloud` in `-Dspring.profiles.active` with `ollama`.
 
 #### PgVector
 
 ```bash
-./gradlew build bootRun -Dspring.profiles.active=advanced,groq-cloud,pgvector -Pvector-db-provider=pgvector
+./gradlew build bootRun -Dspring.profiles.active=docker,groq-cloud,pgvector -Pvector-db-provider=pgvector
 ```
 > You also have the option of building with `-Pmodel-api-provider=ollama` then replacing `groq-cloud` in `-Dspring.profiles.active` with `ollama`.
 
 
 A key thing to note is that **you must activate a combination** of Spring profiles, like:
 
-* `advanced`
 * an LLM provider (i.e., `groq-cloud` or `ollama`)
 * a Vector database provider (i.e., `chroma` or `pgvector`)
 

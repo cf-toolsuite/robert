@@ -39,9 +39,6 @@ dependencies {
 	if (project.hasProperty('vector-db-provider') && project.getProperty('vector-db-provider') == 'pgvector') {
 		implementation 'org.springframework.ai:spring-ai-pgvector-store-spring-boot-starter'
 	}
-	if (project.hasProperty('embedding-model-provider') && project.getProperty('embedding-model-provider') == 'postgresml') {
-    	implementation 'org.springframework.ai:spring-ai-postgresml-spring-boot-starter'
-	}
 	implementation 'io.pivotal.cfenv:java-cfenv-all:3.2.0'
 	implementation 'org.springframework.cloud:spring-cloud-bindings:2.0.3'
 	implementation 'org.apache.commons:commons-lang3'
@@ -53,7 +50,7 @@ dependencies {
 	}
 	implementation 'io.github.cdancy:bitbucket-rest:3.1.1'
 	implementation 'io.github.hkarthik7:azd:5.0.13'
-	if (project.hasProperty('vector-db-provider') || project.hasProperty('embedding-model-provider')) {
+	if (project.hasProperty('vector-db-provider') || project.hasProperty('model-api-provider')) {
 		implementation 'io.micrometer:micrometer-tracing-bridge-otel'
 		implementation 'io.opentelemetry:opentelemetry-exporter-zipkin'
 	}
