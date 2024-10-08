@@ -43,7 +43,7 @@ setup)
 
     echo && printf "\e[37mℹ️  Setting environment variables for use by $APP_NAME application ...\e[m\n" && echo
     cf set-env $APP_NAME JAVA_OPTS "-Djava.security.egd=file:///dev/urandom -XX:+UseG1GC -XX:+UseStringDeduplication"
-    cf set-env $APP_NAME SPRING_PROFILES_ACTIVE "default,advanced,cloud,openai,pgvector"
+    cf set-env $APP_NAME SPRING_PROFILES_ACTIVE "default,openai,pgvector"
     cf set-env $APP_NAME JBP_CONFIG_OPEN_JDK_JRE "{ jre: { version: 21.+ } }"
     cf set-env $APP_NAME JBP_CONFIG_SPRING_AUTO_RECONFIGURATION "{ enabled: false }"
 

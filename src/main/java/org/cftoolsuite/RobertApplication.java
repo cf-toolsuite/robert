@@ -5,33 +5,32 @@ import java.util.Set;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.core.env.ConfigurableEnvironment;
 
 @SpringBootApplication
 @ConfigurationPropertiesScan
-public class RobertApplication implements ApplicationListener<ContextRefreshedEvent> {
+public class RobertApplication {
 
     private static final Set<String> vectorStoreProfiles = Set.of("chroma", "pgvector", "redis");
 
     public static void main(String[] args) {
-        SpringApplication.run(RobertApplication.class, args);
+        SpringApplication app = new SpringApplication(RobertApplication.class);
+        activateAdditionalProfiles(app);
+        app.run(args);
     }
 
-    @Override
-    public void onApplicationEvent(ContextRefreshedEvent event) {
-        ConfigurableEnvironment env = (ConfigurableEnvironment) event.getApplicationContext().getEnvironment();
-        activateAdditionalProfiles(env);
-    }
+    private static void activateAdditionalProfiles(SpringApplication app) {
+		String activeProfiles = System.getProperty("spring.profiles.active");
 
-    private void activateAdditionalProfiles(ConfigurableEnvironment env) {
-        Set<String> activeProfiles = Set.of(env.getActiveProfiles());
+		if (activeProfiles == null) {
+            activeProfiles = System.getenv("SPRING_PROFILES_ACTIVE");
+        }
 
-        boolean hasMatchingProfile = activeProfiles.stream().anyMatch(vectorStoreProfiles::contains);
+        Set<String> activeProfilesSet = Set.of(activeProfiles.split(","));
+
+        boolean hasMatchingProfile = activeProfilesSet.stream().anyMatch(vectorStoreProfiles::contains);
 
         if (hasMatchingProfile && !activeProfiles.contains("advanced")) {
-            env.addActiveProfile("advanced");
+            app.setAdditionalProfiles("advanced");
         }
-    }
+	}
 }
