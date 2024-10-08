@@ -2,7 +2,6 @@ package org.cftoolsuite.etl;
 
 import java.io.IOException;
 
-import org.cftoolsuite.domain.GitRequest;
 import org.cftoolsuite.domain.IngestRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
