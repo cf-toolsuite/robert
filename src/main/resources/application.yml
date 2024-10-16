@@ -62,7 +62,7 @@ app:
     Julia: "jl"
     JavaScript: "js,jsx,mjs"
     Kotlin: "kt,kts"
-    Markup: "md"
+    Markdown: "md"
     MATLAB: "m,mat"
     ObjectiveC: "m,mm"
     Pascal: "pas"
