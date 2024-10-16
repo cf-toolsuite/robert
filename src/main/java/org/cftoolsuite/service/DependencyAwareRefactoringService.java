@@ -5,8 +5,10 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -78,28 +80,35 @@ public class DependencyAwareRefactoringService implements RefactoringService {
         String prompt = String.join(System.lineSeparator() + System.lineSeparator(), "Discovery prompt:", request.discoveryPrompt(), "Refactor prompt:", request.refactorPrompt());
         Repository repo = gitClient.getRepository(request);
         // Step 1: Search for candidates to refactor matching the discovery prompt
-        List<FileSource> candidates =
+        Map<String, String> sourceContentMap =
             search(repo, request)
                 .stream()
-                .map(d -> new FileSource((String) d.getMetadata().get("source"), d.getContent()))
-                .collect(Collectors.toList());
+                .collect(Collectors.groupingBy(
+                    d -> (String) d.getMetadata().get("source"),
+                    Collectors.mapping(Document::getContent, Collectors.joining("\n"))
+                ));
+
+        Set<FileSource> candidates =
+            sourceContentMap.entrySet().stream()
+                .map(entry -> new FileSource(entry.getKey(), entry.getValue()))
+                .collect(Collectors.toSet());
 
         if (CollectionUtils.isEmpty(candidates)) {
             log.info("No candidates found for refactoring.");
             return new GitResponse(prompt, request.uri(), null, null, Collections.emptySet());
         }
 
-        List<FileSource> refactoredSources = new ArrayList<>();
+        Set<FileSource> refactoredSources = new HashSet<>();
 
         // Step 2: Refactor without taking dependencies into account
-        List<FileSource> refactoredSourcesWithoutTakingDependenciesIntoAccount = refactor(request.refactorPrompt(), candidates, "");
+        Set<FileSource> refactoredSourcesWithoutTakingDependenciesIntoAccount = refactor(request.refactorPrompt(), candidates, "");
         refactoredSources.addAll(refactoredSourcesWithoutTakingDependenciesIntoAccount);
 
         // Step 3: Refactor taking dependencies into account
         Map<String, String> potentialDependencies = gitClient.readFiles(repo, null, request.allowedExtensions(), request.commit());
         for (FileSource fs : refactoredSourcesWithoutTakingDependenciesIntoAccount) {
             for (Map.Entry<String, String> entry : potentialDependencies.entrySet()) {
-                List<FileSource> pairs = List.of(fs, new FileSource(entry.getKey(), entry.getValue()));
+                Set<FileSource> pairs = Set.of(fs, new FileSource(entry.getKey(), entry.getValue()));
                 refactoredSources.addAll(refactor(request.refactorPrompt(), pairs, this.dependenciesManagementStanza));
             }
         }
@@ -128,13 +137,23 @@ public class DependencyAwareRefactoringService implements RefactoringService {
         String origin = gitClient.getOrigin(repo);
         String latestCommit = gitClient.getLatestCommit(repo).getId().name();
         String query = seek.replace("{discoveryPrompt}", request.discoveryPrompt());
-        List<Document> candidates = store.similaritySearch(SearchRequest.query(query).withFilterExpression(assembleFilterExpression(request, origin, latestCommit)).withSimilarityThresholdAll());;
+        List<Document> candidates =
+            store
+                .similaritySearch(
+                    SearchRequest
+                        .query(query)
+                        .withFilterExpression(
+                            assembleFilterExpression(request, origin, latestCommit)
+                        )
+                        .withSimilarityThresholdAll()
+                        .withTopK(100)
+                );
         log.trace("Refactor candidates are: {}", candidates);
         return candidates;
     }
 
-    protected List<FileSource> refactor(String articulation, List<FileSource> candidates, String dependenciesManagementStanza) throws IOException{
-        List<FileSource> refactoredSources = new ArrayList<>();
+    protected Set<FileSource> refactor(String articulation, Set<FileSource> candidates, String dependenciesManagementStanza) throws IOException{
+        Set<FileSource> refactoredSources = new HashSet<>();
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
         candidates.forEach(d -> {
             executor.schedule(() -> {

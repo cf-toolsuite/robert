@@ -10,6 +10,7 @@ import org.cftoolsuite.etl.GitRepositoryIngester;
 import org.cftoolsuite.etl.JavaSourceMetadataEnricher;
 import org.cftoolsuite.service.DependencyAwareRefactoringService;
 import org.cftoolsuite.service.RefactoringService;
+import org.cftoolsuite.service.SearchService;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -78,6 +79,11 @@ public class Advanced {
     @Bean
     public JavaSourceMetadataEnricher javaSourceMetadataEnricher(ObjectMapper objectMapper) {
         return new JavaSourceMetadataEnricher(objectMapper);
+    }
+
+    @Bean
+    public SearchService searchService(VectorStore store, GitClient gitClient) {
+        return new SearchService(store, gitClient);
     }
 
 }

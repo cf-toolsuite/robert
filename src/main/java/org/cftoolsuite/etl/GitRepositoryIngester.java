@@ -70,7 +70,8 @@ public class GitRepositoryIngester {
             transformers.entrySet().forEach(entry -> entry.getValue().apply(documents));
         }
 
-        TokenTextSplitter splitter = new TokenTextSplitter();
-        store.accept(splitter.apply(documents));
+        //TokenTextSplitter splitter = new TokenTextSplitter();
+        //store.accept(splitter.apply(documents));
+        store.accept(documents);
     }
 }
