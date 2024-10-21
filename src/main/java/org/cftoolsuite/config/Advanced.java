@@ -8,10 +8,12 @@ import org.cftoolsuite.client.GitClient;
 import org.cftoolsuite.client.PullRequestClientFactory;
 import org.cftoolsuite.etl.GitRepositoryIngester;
 import org.cftoolsuite.etl.JavaSourceMetadataEnricher;
+import org.cftoolsuite.service.ChatService;
 import org.cftoolsuite.service.DependencyAwareRefactoringService;
 import org.cftoolsuite.service.RefactoringService;
 import org.cftoolsuite.service.SearchService;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.memory.InMemoryChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.ListableBeanFactory;
@@ -38,8 +40,7 @@ public class Advanced {
 
     @Bean
     public String dependenciesManagementStanza() {
-        return
-            """
+        return """
             Take note of any dependent relationships in source.
             Update method calls in modified source if appropriate.
             """;
@@ -84,6 +85,10 @@ public class Advanced {
     @Bean
     public SearchService searchService(VectorStore store, GitClient gitClient) {
         return new SearchService(store, gitClient);
+    }
+
+    @Bean ChatService chatService(ChatModel model, VectorStore vectorStore) {
+        return new ChatService(ChatClient.builder(model), vectorStore, new InMemoryChatMemory());
     }
 
 }

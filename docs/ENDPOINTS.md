@@ -3,6 +3,9 @@
 * [Endpoints](#endpoints)
   * [Clone](#clone)
   * [Ingest](#ingest)
+  * [Search](#search)
+  * [Fetch](#fetch)
+  * [Chat](#chat)
   * [Refactor](#refactor)
   * [Language extensions](#language-extensions)
 
@@ -14,7 +17,7 @@
 POST /clone
 ```
 
-Clones source from a Git repository to your local desktop
+Clones source from a Git repository to your local desktop.
 
 Minimum required inputs:
 
@@ -30,7 +33,7 @@ Note: if you're working with a private repository you will be required to supply
 
 ### Ingest
 
-This endpoint is only available when `spring.profiles.active` includes `advanced` mode.  You must ingest a repository before initiating a refactor request.
+This endpoint is only available when `spring.profiles.active` includes `advanced` mode.  When in `advanced` mode, you must ingest a repository before initiating a refactor request.
 
 ```python
 POST /ingest
@@ -51,6 +54,83 @@ Optional inputs are:
 * `allowedExtensions` - a set of allowed file extensions used for file path filtering purposes; when specified, only `filePaths` containing a file extension in the set of extensions will be considered
 
 Note: if you're working with a private repository you will be required to supply `username` and `password` values, as clone operation will be authenticated
+
+### Search
+
+This endpoint is only available when `spring.profiles.active` includes `advanced` mode.  When in `advanced` mode, you must ingest a repository before initiating a search request.
+
+```python
+POST /search
+```
+
+Conducts a similarity search for files whose contents that match the query.  A [GitResponse](../src/main/java/org/cftoolsuite/domain/GitResponse.java) is returned.
+
+Minimum required inputs:
+
+* `uri` - a remote Git repository, must be accessible via `https` protocol
+* `discoveryPrompt` - an articulation of what you would like to discover within the source
+
+Example of `discoveryPrompt`:
+
+Any occurrences of Lombok's Builder annotation?
+
+Optional inputs are:
+
+* `username` - your Git repository provider account username
+* `password` - your Git repository provider account password
+  * if you have a Github account, then this value should be set to a classic [personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic) with full `repo` permissions.
+* `commit` - a commit hash, if not supplied the latest commit on origin/main is used
+* `allowedExtensions` - a set of allowed file extensions used for file path filtering purposes; when specified, only `filePaths` containing a file extension in the set of extensions will be considered
+
+**Sample interaction**
+
+```bash
+http POST :8080/search uri=https://github.com/cf-toolsuite/cf-butler.git discoveryPrompt=$discoveryPrompt
+```
+
+### Fetch
+
+This endpoint is only available when `spring.profiles.active` includes `advanced` mode.  When in `advanced` mode, you must ingest a repository before initiating a fetch request.
+
+```python
+POST /fetch
+```
+
+Returns the contents of a single file.
+
+Minimum required inputs:
+
+* `uri` - a remote Git repository, must be accessible via `https` protocol
+* `filePaths` - a set that contains one relative file path from the root of the repository
+
+Optional inputs are:
+
+* `username` - your Git repository provider account username
+* `password` - your Git repository provider account password
+  * if you have a Github account, then this value should be set to a classic [personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic) with full `repo` permissions.
+* `commit` - a commit hash, if not supplied the latest commit on origin/main is used
+
+**Sample interaction**
+
+```bash
+http POST :8080/fetch uri=https://github.com/cf-toolsuite/cf-butler.git filePaths:='["src/main/java/org/cftoolsuite/cfapp/domain/AppDetail.java"]'
+```
+
+### Chat
+
+This endpoint is only available when `spring.profiles.active` includes `advanced` mode.  When in `advanced` mode, you must ingest a repository before initiating a chat request.
+
+```python
+GET /chat
+```
+
+Converse with an AI chatbot that understands the source that has been ingested.  Ask a question, get a response.
+
+**Sample interaction**
+
+```bash
+http :8080 q="Are there any occurrences of the Lombok Builder annotation?"
+```
 
 ### Refactor
 
