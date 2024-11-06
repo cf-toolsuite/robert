@@ -38,7 +38,7 @@ dependencies {
 	if (project.hasProperty('vector-db-provider') && project.getProperty('vector-db-provider') == 'pgvector') {
 		implementation 'org.springframework.ai:spring-ai-pgvector-store-spring-boot-starter'
 	}
-	implementation 'io.pivotal.cfenv:java-cfenv-all:3.2.0'
+	implementation 'io.pivotal.cfenv:java-cfenv-all:3.3.0'
 	implementation 'org.springframework.cloud:spring-cloud-bindings:2.0.3'
 	implementation 'org.apache.commons:commons-lang3'
 	implementation 'com.github.javaparser:javaparser-core-serialization:3.26.2'
