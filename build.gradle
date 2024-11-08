@@ -4,6 +4,7 @@ plugins {
 	id 'com.gorylenko.gradle-git-properties' version '2.4.2'
 	id 'org.springframework.boot' version '3.4.0-M3'
 	id 'io.spring.dependency-management' version '1.1.6'
+	id 'org.eclipse.jkube.kubernetes' version '1.17.0'
 }
 
 group = 'org.cftoolsuite'
@@ -38,8 +39,15 @@ dependencies {
 	if (project.hasProperty('vector-db-provider') && project.getProperty('vector-db-provider') == 'pgvector') {
 		implementation 'org.springframework.ai:spring-ai-pgvector-store-spring-boot-starter'
 	}
-	implementation 'io.pivotal.cfenv:java-cfenv-all:3.2.0'
+	if (project.hasProperty('vector-db-provider') && project.getProperty('vector-db-provider') == 'redis') {
+		implementation 'org.springframework.ai:spring-ai-redis-store-spring-boot-starter'
+	}
+	if (project.hasProperty('vector-db-provider') && project.getProperty('vector-db-provider') == 'weaviate') {
+		implementation 'org.springframework.ai:spring-ai-weaviate-store-spring-boot-starter'
+	}
+	implementation 'io.pivotal.cfenv:java-cfenv-all:3.3.0'
 	implementation 'org.springframework.cloud:spring-cloud-bindings:2.0.3'
+	implementation 'org.springframework.ai:spring-ai-spring-cloud-bindings'
 	implementation 'org.apache.commons:commons-lang3'
 	implementation 'com.github.javaparser:javaparser-core-serialization:3.26.2'
 	implementation 'org.eclipse.jgit:org.eclipse.jgit:7.0.0.202409031743-r'
@@ -78,8 +86,29 @@ bootRun {
     systemProperties System.properties
 }
 
+tasks.named('bootBuildImage') {
+	imageName = "docker.io/${project.group.contains('.') ? project.group.tokenize('.').last() : project.group}/${project.name}:${project.version}"
+	tags = [ "docker.io/${project.group.contains('.') ? project.group.tokenize('.').last() : project.group}/${project.name}:latest" ]
+}
+
 jar {
     archiveBaseName = project.findProperty('jarBaseName') ?: project.name
+}
+
+kubernetes {
+	buildStrategy = 'buildpacks'
+    generator {
+        config {
+            'spring-boot' {
+                color = 'always'
+            }
+        }
+    }
+    helm {
+        maintainers = [{
+            name = 'Chris Phillipson'
+        }]
+    }
 }
 
 task setVersion {

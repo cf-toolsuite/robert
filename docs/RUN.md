@@ -7,11 +7,13 @@
   * [with Vector database](#with-vector-database)
     * [Chroma](#chroma)
     * [PgVector](#pgvector)
+    * [Redis Stack](#redis-stack)
+    * [Weaviate](#weaviate)
   * [with alternate prompts](#with-alternate-prompts)
     * [Discovery](#discovery)
     * [Refactor](#refactor)
   * [override the token per minute delay](#override-the-token-per-minute-delay)
-* [How to run on Cloud Foundry](#how-to-run-on-cloud-foundry)
+* [How to run on Tanzu Platform for Cloud Foundry](#how-to-run-on-tanzu-platform-for-cloud-foundry)
   * [Target a foundation](#target-a-foundation)
   * [Authenticate](#authenticate)
   * [Target space](#target-space)
@@ -20,6 +22,29 @@
   * [Deploy](#deploy)
   * [Inspect and/or update the PgVector store database instance](#inspect-andor-update-the-pgvector-store-database-instance)
 * [How to run on Kubernetes](#how-to-run-on-kubernetes)
+  * [Build](#build)
+  * [(Optional) Authenticate to a container image registry](#optional-authenticate-to-a-container-image-registry)
+  * [(Optional) Push image to a container registry](#optional-push-image-to-a-container-registry)
+  * [Target a cluster](#target-a-cluster)
+  * [Prepare](#prepare)
+  * [Apply](#apply)
+  * [Setup port forwarding](#setup-port-forwarding)
+  * [Teardown](#teardown)
+* [How to run on Tanzu Platform for Kubernetes](#how-to-run-on-tanzu-platform-for-kubernetes)
+  * [Clone this repo](#clone-this-repo)
+  * [Initialize](#initialize)
+    * [Configuring daemon builds](#configuring-daemon-builds)
+    * [Configuring platform builds](#configuring-platform-builds)
+    * [Validating build configuration](#validating-build-configuration)
+  * [Pre-provision services](#pre-provision-services)
+    * [Open AI](#open-ai)
+    * [Weaviate Cloud](#weaviate-cloud)
+  * [Define an Egress Point](#define-an-egress-point)
+  * [Specify service bindings](#specify-service-bindings)
+  * [Deploy services](#deploy-services)
+  * [Deploy application with service bindings](#deploy-application-with-service-bindings)
+  * [Establish a domain binding](#establish-a-domain-binding)
+  * [Destroy the app and services](#destroy-the-app-and-services)
 
 R*bert has two runtime modes of operation: `simple` and `advanced`, where the default mode is set to `simple`.
 
@@ -106,6 +131,17 @@ Open another terminal shell and execute
 
 This setup leverages Spring Boot's support for Docker Compose and launches either an instance of Chroma or PgVector for use by the VectorStore.  This mode activates Git repository ingestion and Document metadata enrichment for Java source files found.  It also activates the [DependencyAwareRefactoringService](../src/main/java/org/cftoolsuite/service/DependencyAwareRefactoringService.java).
 
+A key thing to note is that **you must activate a combination** of Spring profiles, like:
+
+* `docker` - required when you are running "off platform"
+* an LLM provider (i.e., `openai`, `groq-cloud` or `ollama`)
+* a Vector database provider (i.e., `chroma`, `pgvector`, `redis`, or `weaviate`)
+
+and Gradle project properties, like:
+
+* `-Pmodel-api-provider=ollama`
+* `-Pvector-db-provider=chroma` or `-Pvector-db-provider=pgvector` or `-Pvector-db-provider=redis` or `-Pvector-db-provider=weaviate`
+
 #### Chroma
 
 ```bash
@@ -120,16 +156,19 @@ This setup leverages Spring Boot's support for Docker Compose and launches eithe
 ```
 > You also have the option of building with `-Pmodel-api-provider=ollama` then replacing `groq-cloud` in `-Dspring.profiles.active` with `ollama`.
 
+#### Redis Stack
 
-A key thing to note is that **you must activate a combination** of Spring profiles, like:
+```bash
+./gradlew build bootRun -Dspring.profiles.active=docker,openai,redis -Pvector-db-provider=redis
+```
+> You also have the option of building with `-Pmodel-api-provider=ollama` then replacing `openai` or `groq-cloud` in `-Dspring.profiles.active` with `ollama`.
 
-* an LLM provider (i.e., `groq-cloud` or `ollama`)
-* a Vector database provider (i.e., `chroma` or `pgvector`)
+#### Weaviate
 
-and Gradle project properties, like:
-
-* `-Pmodel-api-provider=ollama`
-* `-Pvector-db-provider=chroma` or `-Pvector-db-provider=pgvector`
+```bash
+./gradlew build bootRun -Dspring.profiles.active=docker,openai,weaviate -Pvector-db-provider=weaviate
+```
+> You also have the option of building with `-Pmodel-api-provider=ollama` then replacing `openai` or `groq-cloud` in `-Dspring.profiles.active` with `ollama`.
 
 ### with alternate prompts
 
@@ -187,7 +226,7 @@ to invocations of
 ./gradlew bootRun
 ```
 
-## How to run on Cloud Foundry
+## How to run on Tanzu Platform for Cloud Foundry
 
 ### Target a foundation
 
@@ -195,7 +234,7 @@ to invocations of
 cf api {cloud_foundry_foundation_api_endpoint}
 ```
 
-> Replace `{cloud_foundry_foundation_api_endpoint}` above with an API endppint
+> Replace `{cloud_foundry_foundation_api_endpoint}` above with an API endpoint
 
 Sample interaction
 
@@ -417,6 +456,577 @@ CREATE INDEX spring_ai_vector_index ON public.vector_store USING hnsw (embedding
 
 To exit, just type `exit`.
 
+
 ## How to run on Kubernetes
 
-TBD
+We're going to make use of the [Eclipse JKube Gradle plugin](https://eclipse.dev/jkube/docs/kubernetes-gradle-plugin/#getting-started).
+
+To build targeting the appropriate, supporting, runtime infrastructure, you will need to choose:
+
+* LLM provider
+  * groq-cloud, openai
+* Vector store
+  * chroma, pgvector
+
+### Build
+
+To build a container image with Spring Boot, set the container image version, and assemble the required Kubernetes manifests for deployment, execute:
+
+```bash
+❯ gradle clean setVersion build bootBuildImage k8sResource -PnewVersion=$(date +"%Y.%m.%d") -Pvector-db-provider=chroma -Pjkube.environment=groq-cloud,chroma,observability --stacktrace
+```
+
+This will build and tag a container image using [Paketo Buildpacks](https://paketo.io/docs/concepts/buildpacks/) and produce a collection of manifests in `build/classes/META-INF/jkube`.
+
+### (Optional) Authenticate to a container image registry
+
+If you are a contributor with an account that has permissions to push updates to the container image, you will need to authenticate with the container image registry.
+
+For [DockerHub](https://hub.docker.com/), you could execute:
+
+```bash
+echo "REPLACE_ME" | docker login docker.io -u cftoolsuite --password-stdin
+```
+
+For [GitHub CR](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-to-the-container-registry), you could execute:
+
+```bash
+echo "REPLACE_ME" | docker login ghcr.io -u cf-toolsuite --password-stdin
+```
+
+> Replace the password value `REPLACE_ME` above with a valid personal access token to DockerHub or GitHub CR.
+
+### (Optional) Push image to a container registry
+
+Here's how to push an update:
+
+```bash
+gradle k8sPush
+```
+
+### Target a cluster
+
+You will need to establish a connection context to a cluster you have access to.
+
+The simplest thing to do... is to launch a [Kind](https://kind.sigs.k8s.io/docs/user/quick-start/#creating-a-cluster) cluster.
+
+```bash
+kind create cluster
+```
+
+### Prepare
+
+Consult GitHub CR for the latest available tagged image, [here](https://github.com/cf-toolsuite/robert/pkgs/container/robert).
+
+Edit the `build/classes/java/main/META-INF/jkube/kubernetes/robert-deployment.yml` and `build/classes/java/main/META-INF/jkube/kubernetes/robert-service.yml` files
+
+You should replace occurrences of `YYYY.MM.DD` (e.g., 2024.11.08) with the latest available tag, and save your changes.
+
+> Note: the image tag in Github CR will have a slightly different format (e.g., 20241108.1429.08405)
+
+Before deploying you will want to edit the contents of `build/classes/java/main/META-INF/jkube/kubernetes/spring-ai-creds-secret.yml`.
+
+Back when you built the image and created the Kubernetes manifests, you had to supply a comma-separated `-Pjkube.environment=` set of argument values.
+
+If that set contained `openai`, you would see the following fragment within the secret:
+
+```yaml
+stringData:
+  creds.yml: |
+    spring:
+      ai:
+        openai:
+          api-key: REPLACE_WITH_OPENAI_API_KEY
+```
+
+> Your job is to replace the occurrence of `REPLACE_WITH_OPENAI_API_KEY` with valid API key value from Open AI.
+
+If, however, that set contained `groq-cloud`, you would see the following fragment within the secret:
+
+```yaml
+stringData:
+  creds.yml: |
+    spring:
+      ai:
+        openai:
+          api-key: REPLACE_WITH_GROQCLOUD_API_KEY
+          embedding:
+            api-key: REPLACE_WITH_OPENAI_API_KEY
+            base_url: https://api.openai.com
+```
+
+> Your job is to replace the occurrences of values that start with `REPLACE_WITH` with valid API key values from Groq Cloud and Open AI respectively. The Open AI key-value is used for the embedding model as Groq Cloud does not have support for embedding models, yet.
+
+### Apply
+
+Finally, we can deploy the application and dependent runtime services to our Kubernetes cluster.
+
+Do so, with:
+
+```bash
+gradle k8sApply -Pvector-db-provider=chroma -Pjkube.environment=openai,chroma,observability
+```
+
+or
+
+```bash
+kubectl apply -f build/classes/java/main/META-INF/jkube/kubernetes.yml
+```
+
+### Setup port forwarding
+
+At this point you'd probably like to interact with robert, huh?  We need to setup port-forwarding, so execute:
+
+```bash
+kubectl port-forward service/robert 8080:8080
+```
+
+Then visit `http://localhost:8080/actuator/info` in your favorite browser.
+
+Consult the [ENDPOINTS.md](ENDPOINTS.md) documentation to learn about what else you can do.
+
+When you're done, revisit the terminal where you started port-forwarding and press `Ctrl+C`.
+
+> Yeah, this only gets you so far.  For a more production-ready footprint, there's quite a bit more work involved.  But this suffices for an inner-loop development experience.
+
+### Teardown
+
+```bash
+gradle k8sUndeploy -Pvector-db-provider=chroma -Pjkube.environment=openai,chroma,observability
+```
+
+or
+
+```bash
+kubectl delete -f build/classes/java/main/META-INF/jkube/kubernetes.yml
+```
+
+And if you launched a Kind cluster earlier, don't forget to tear it down with:
+
+```bash
+kind delete cluster
+```
+
+## How to run on Tanzu Platform for Kubernetes
+
+Consider this a Quick Start guide to getting `robert` deployed using the [tanzu](https://docs.vmware.com/en/VMware-Tanzu-Application-Platform/1.12/tap/install-tanzu-cli.html) CLI.
+
+We'll be focused on a subset of commands to get the job done.  That said, you will likely need to work with a Platform Engineer within your enterprise to pre-provision an environment for your use.
+
+This [Github gist](https://gist.github.com/pacphi/b9a7bb0f9538db1d11d1671d8a2b5566) should give you sense of how to get started with infrastructure provisioning and operational concerns, before attempting to deploy.
+
+### Clone this repo
+
+```bash
+gh repo clone cf-toolsuite/robert
+```
+
+### Initialize
+
+> We're going to assume that your account is a member of an organization and has appropriate access-level permissions to work with an existing project and space(s).
+
+Login, set a project and space.
+
+```bash
+tanzu login
+tanzu project list
+tanzu project use AMER-West
+tanzu space list
+tanzu space use cphillipson-sbx
+```
+
+> You will set a different `project` and `space`.  The above is just illustrative of what you'll need to do to target where you'll deploy your own instance of this application.
+
+Set the context for `kubectl`, just in case you need to inspect resources.
+
+```bash
+tanzu context current
+```
+
+**Sample interaction**
+
+```bash
+❯ tanzu context current
+  Name:            sa-tanzu-platform
+  Type:            tanzu
+  Organization:    sa-tanzu-platform (77aee83b-308f-4c8e-b9c4-3f7a6f19ba75)
+  Project:         AMER-West (3b65ba5e-52a4-4666-ad29-4eefab93127b)
+  Space:           cphillipson-sbx
+  Kube Config:     /home/cphillipson/.config/tanzu/kube/config
+  Kube Context:    tanzu-cli-sa-tanzu-platform:AMER-West:cphillipson-sbx
+```
+
+Then
+
+```bash
+# Use the value after "Kube Config:"
+# Likely this will work consistently for you
+export KUBECONFIG=$HOME/.config/tanzu/kube/config
+```
+
+Now, let's jump into the root-level directory of the Git repository's project we cloned earlier, create a new branch, and freshly initialize Tanzu application configuration.
+
+```bash
+cd robert
+git checkout -b tp4k8s-experiment
+tanzu app init -y
+```
+
+We'll also need to remove any large files or sensitive configuration files.
+
+```
+du -sh * -c
+./prune.sh
+```
+
+Edit the file `.tanzu/config/robert.yml`.
+
+It should look like this after editing.  Save your work.
+
+```yaml
+apiVersion: apps.tanzu.vmware.com/v1
+kind: ContainerApp
+metadata:
+  name: robert
+spec:
+  nonSecretEnv:
+    - name: JAVA_TOOL_OPTIONS
+      value: "-Djava.security.egd=file:///dev/urandom -XX:+UseZGC -XX:+UseStringDeduplication"
+    - name: SPRING_PROFILES_ACTIVE
+      value: "default,cloud,openai,weaviate"
+  build:
+    nonSecretEnv:
+    - name: BP_JVM_VERSION
+      value: "21"
+    - name: BP_GRADLE_BUILD_ARGUMENTS
+      value: "-Pvector-db-provider=weaviate"
+    buildpacks: {}
+    path: ../..
+  contact:
+    team: cftoolsuite
+  ports:
+  - name: main
+    port: 8080
+  probes:
+    liveness:
+      httpGet:
+        path: /actuator/health/liveness
+        port: 8080
+        scheme: HTTP
+    readiness:
+      httpGet:
+        path: /actuator/health/readiness
+        port: 8080
+        scheme: HTTP
+    startup:
+      failureThreshold: 120
+      httpGet:
+        path: /actuator/health/readiness
+        port: 8080
+        scheme: HTTP
+      initialDelaySeconds: 2
+      periodSeconds: 2
+```
+
+#### Configuring daemon builds
+
+```bash
+tanzu build config \
+  --build-plan-source-type ucp \
+  --containerapp-registry docker.io/{contact.team}/{name} \
+  --build-plan-source custom-build-plan-ingressv2  \
+  --build-engine=daemon
+```
+
+Builds will be performed locally.  (Docker must be installed).  We are targeting Dockerhub as the container image registry.  If you wish to target another registry provider you would have to change the prefix value of `docker.io` above to something else.  Pay attention to `{contact.team}`.  In the `ContainerApp` resource definition above, you will have to change `cftoolsuite` to an existing repository name in your registry.
+
+You will also have to authenticate with the registry, e.g.
+
+```bash
+export REGISTRY_USERNAME=cftoolsuite
+export REGISTRY_PASSWORD=xxx
+export REGISTRY_HOST=docker.io
+echo $REGISTRY_PASSWORD | docker login $REGISTRY_HOST -u $REGISTRY_USERNAME --password-stdin
+```
+
+> Replace the values of `REGISTRY_` environment variables above as appropriate.
+
+By the way, whatever container image registry provider you choose, make sure to restrict access to the repository.  If you're using DockerHub, set the visibility of your repository to private.
+
+> If your app will work with a private registry, then your Platform Engineer will have to have had to configure the [Registry Credentials Pull Only Installer](https://www.platform.tanzu.broadcom.com/hub/application-engine/capabilities/registry-pull-only-credentials-installer.tanzu.vmware.com/details).
+
+<details>
+
+<summary>Working with a container registry hosted on Github</summary>
+
+Alternatively, if you intend to use [Github](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-to-the-container-registry) as a container image registry provider for your repository, you could authenticate to the registry with
+
+```bash
+export REGISTRY_USERNAME=cf-toolsuite
+export REGISTRY_PASSWORD=xxx
+export REGISTRY_HOST=ghcr.io
+echo $REGISTRY_PASSWORD | docker login $REGISTRY_HOST -u $REGISTRY_USERNAME --password-stdin
+```
+
+then update the build configuration to be
+
+```bash
+tanzu build config \
+  --build-plan-source-type ucp \
+  --containerapp-registry ghcr.io/{contact.team}/{name} \
+  --build-plan-source custom-build-plan-ingressv2  \
+  --build-engine=daemon
+```
+
+and finally, make sure that `contact.name` in the `ContainerApp` is updated to be `cf-toolsuite` which matches the organization name for the Github repository.
+
+> The first time you build and publish the container image, if you do not want to have to configure `Registry Credentials Pull Only Installer`, you will need to visit the `Package settings`, then set the visibility of the package to `Public`.
+
+</details>
+
+#### Configuring platform builds
+
+```bash
+tanzu build config \
+  --build-plan-source-type ucp \
+  --containerapp-registry us-west1-docker.pkg.dev/fe-cpage/west-sa-build-registry/{contact.team}/{name} \
+  --build-plan-source custom-build-plan-ingressv2 \
+  --build-engine=platform
+```
+
+A benefit of platform builds is that they occur on-platform.  (Therefore, Docker does not need to be installed).  We will assume that a Platform Engineer has set this up on our behalf.
+
+> You will likely need to change `us-west1-docker.pkg.dev/fe-cpage/west-sa-build-registry` above to an appropriate prefix targeting a shared container image registry.
+
+#### Validating build configuration
+
+For daemon builds, e.g.
+
+```bash
+❯ tanzu build config view
+Using config file: /home/cphillipson/.config/tanzu/build/config.yaml
+Success: Getting config
+buildengine: daemon
+buildPlanSource: custom-build-plan-ingressv2
+buildPlanSourceType: ucp
+containerAppRegistry: docker.io/{contact.team}/{name}
+experimentalFeatures: false
+```
+
+### Pre-provision services
+
+Create a new sibling directory of `.tanzu/config` to contain service manifests.
+
+```bash
+mkdir .tanzu/service
+```
+
+Place yourself in the `.tanzu/service` directory.  We'll create `PreProvisionedService` and `Secret` manifests for a handful of the off-platform services that `robert` will need to interact with.
+
+```bash
+
+cd .tanzu/service
+```
+
+#### Open AI
+
+Create a file named `openai.yml`, adjust and save the content below:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: openai-creds
+type: servicebinding.io/ai
+stringData:
+  uri: CHANGE_ME
+  api-key: CHANGE_ME
+  provider: openai
+  type: openai
+
+---
+apiVersion: services.tanzu.vmware.com/v1
+kind: PreProvisionedService
+metadata:
+  name: openai
+spec:
+  bindingConnectors:
+  - name: main
+    description: Open AI credentials
+    type: openai
+    secretRef:
+      name: openai-creds
+```
+
+> You will need to replace occurrences of `CHANGE_ME` above with your own `uri` and `api-key` values that will authenticate and authorize a connection to your account on the Open AI platform.
+
+#### Weaviate Cloud
+
+Create a file named `weaviate-cloud.yml`, adjust and save the content below:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: weaviate-cloud-creds
+type: servicebinding.io/ai
+stringData:
+  uri: CHANGE_ME
+  api-key: CHANGE_ME
+  provider: weaviate-cloud
+  type: weaviate-cloud
+
+---
+apiVersion: services.tanzu.vmware.com/v1
+kind: PreProvisionedService
+metadata:
+  name: weaviate-cloud
+spec:
+  bindingConnectors:
+  - name: main
+    description: Weaviate Cloud credentials
+    type: weaviate-cloud
+    secretRef:
+      name: weaviate-cloud-creds
+```
+
+> You will need to replace occurrences of `CHANGE_ME` above with your own `uri` and `api-key` values that will authenticate and authorize a connection to the instance of Weaviate you are hosting on [Weaviate Cloud](https://console.weaviate.io).
+
+### Define an Egress Point
+
+Create a file named `robert-services-egress.yml`, adjust and save the content below:
+
+```bash
+apiVersion: networking.tanzu.vmware.com/v1alpha1
+kind: EgressPoint
+metadata:
+   name: robert-services-egress
+spec:
+  targets:
+  # Open AI host
+  - hosts:
+    - api.openai.com
+    port:
+      number: 443
+      protocol: HTTPS
+  # Weaviate Cloud host
+  - hosts:
+    - CHANGE_ME.gcp.weaviate.cloud
+    port:
+      number: 443
+      protocol: HTTPS
+```
+
+> You will need to replace occurrences of `CHANGE_ME` above with your own.  Note the `EgressPoint`'s `hosts` values above should be the same as those for the `Secret`'s `uri` values but without the scheme (i.e., do not include `https://`).
+
+### Specify service bindings
+
+Change directories again.  Place yourself back into the directory containing `robert.yml`.
+
+```bash
+cd ../config
+```
+
+Create another file named `robert-service-bindings.yml` and save the content below into it.  This file should live in same directory as the services and the application.
+
+```yaml
+apiVersion: services.tanzu.vmware.com/v1
+kind: ServiceBinding
+metadata:
+  name: minio-service-binding
+spec:
+  targetRef:
+    apiGroup: apps.tanzu.vmware.com
+    kind: ContainerApp
+    name: robert
+
+  serviceRef:
+    apiGroup: services.tanzu.vmware.com
+    kind: PreProvisionedService
+    name: minio
+    connectorName: main
+
+---
+apiVersion: services.tanzu.vmware.com/v1
+kind: ServiceBinding
+metadata:
+  name: openai-service-binding
+spec:
+  targetRef:
+    apiGroup: apps.tanzu.vmware.com
+    kind: ContainerApp
+    name: robert
+
+  serviceRef:
+    apiGroup: services.tanzu.vmware.com
+    kind: PreProvisionedService
+    name: openai
+    connectorName: main
+
+---
+apiVersion: services.tanzu.vmware.com/v1
+kind: ServiceBinding
+metadata:
+  name: weaviate-cloud-service-binding
+spec:
+  targetRef:
+    apiGroup: apps.tanzu.vmware.com
+    kind: ContainerApp
+    name: robert
+
+  serviceRef:
+    apiGroup: services.tanzu.vmware.com
+    kind: PreProvisionedService
+    name: weaviate-cloud
+    connectorName: main
+```
+
+### Deploy services
+
+Let's place ourselves back into the root-level directory
+
+```bash
+cd ../..
+```
+
+then execute
+
+```bash
+tanzu deploy --only .tanzu/service -y
+```
+
+### Create and publish package to container image registry repository
+
+```bash
+tanzu build -o .tanzu/build
+```
+
+### Deploy application with service bindings
+
+```bash
+tanzu deploy --from-build .tanzu/build -y
+```
+
+Here's a few optional commands you could run afterwards to check on the state of deployment
+
+```bash
+tanzu app get robert
+tanzu app logs robert --lines -1
+```
+
+### Establish a domain binding
+
+```bash
+tanzu domain-binding create robert --domain robert.sbx.tpk8s.cloudmonk.me --entrypoint main --port 443
+```
+
+> Replace the portion of the value of `--domain` before the application name above with your own sub-domain (or with one your Platform Engineer setup on your behalf).
+
+Checkout [ENDPOINTS.md](ENDPOINTS.md) to see what you can do.
+
+### Destroy the app and services
+
+```bash
+kubectl delete -f .tanzu/service
+tanzu app delete robert -y
+```
