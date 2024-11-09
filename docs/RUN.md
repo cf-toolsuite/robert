@@ -933,23 +933,6 @@ Create another file named `robert-service-bindings.yml` and save the content bel
 apiVersion: services.tanzu.vmware.com/v1
 kind: ServiceBinding
 metadata:
-  name: minio-service-binding
-spec:
-  targetRef:
-    apiGroup: apps.tanzu.vmware.com
-    kind: ContainerApp
-    name: robert
-
-  serviceRef:
-    apiGroup: services.tanzu.vmware.com
-    kind: PreProvisionedService
-    name: minio
-    connectorName: main
-
----
-apiVersion: services.tanzu.vmware.com/v1
-kind: ServiceBinding
-metadata:
   name: openai-service-binding
 spec:
   targetRef:
