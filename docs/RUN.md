@@ -516,7 +516,7 @@ kind create cluster
 
 ### Prepare
 
-Consult GitHub CR for the latest available tagged image, [here](https://github.com/cf-toolsuite/robert/pkgs/container/robert).
+Consult GitHub CR for the latest available tagged image, [here](https://github.com/orgs/cf-toolsuite/packages/container/package/robert).
 
 Edit the `build/classes/java/main/META-INF/jkube/kubernetes/robert-deployment.yml` and `build/classes/java/main/META-INF/jkube/kubernetes/robert-service.yml` files
 
