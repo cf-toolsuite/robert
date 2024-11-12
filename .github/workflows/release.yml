@@ -21,6 +21,18 @@ jobs:
           - vector-db: pgvector
             model-api: ollama
             jar-base-name: robert-ollama-pgvector
+          - vector-db: redis
+            model-api: openai
+            jar-base-name: robert-openai-redis
+          - vector-db: redis
+            model-api: ollama
+            jar-base-name: robert-ollama-redis
+          - vector-db: weaviate
+            model-api: openai
+            jar-base-name: robert-openai-weaviate
+          - vector-db: weaviate
+            model-api: ollama
+            jar-base-name: robert-ollama-weaviate
     steps:
       - uses: actions/checkout@v4
       - uses: gradle/actions/wrapper-validation@v4
@@ -69,4 +81,3 @@ jobs:
           fail_on_unmatched_files: true
           generate_release_notes: true
           token: ${{ secrets.GITHUB_TOKEN }}
-
