@@ -46,7 +46,7 @@ dependencies {
 		implementation 'org.springframework.ai:spring-ai-weaviate-store-spring-boot-starter'
 	}
 	implementation 'io.pivotal.cfenv:java-cfenv-all:3.3.0'
-	implementation 'org.springframework.cloud:spring-cloud-bindings:2.0.3'
+	implementation 'org.springframework.cloud:spring-cloud-bindings:2.0.4'
 	implementation 'org.springframework.ai:spring-ai-spring-cloud-bindings'
 	implementation 'org.apache.commons:commons-lang3'
 	implementation 'com.github.javaparser:javaparser-core-serialization:3.26.2'
