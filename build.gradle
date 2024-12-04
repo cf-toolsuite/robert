@@ -50,7 +50,7 @@ dependencies {
 	implementation 'org.springframework.ai:spring-ai-spring-cloud-bindings'
 	implementation 'org.apache.commons:commons-lang3'
 	implementation 'com.github.javaparser:javaparser-core-serialization:3.26.2'
-	implementation 'org.eclipse.jgit:org.eclipse.jgit:7.0.0.202409031743-r'
+	implementation 'org.eclipse.jgit:org.eclipse.jgit:7.1.0.202411261347-r'
 	implementation 'org.kohsuke:github-api:1.326'
 	implementation ('org.gitlab4j:gitlab4j-api:5.7.0') {
 		exclude group: 'commons-logging', module: 'commons-logging'
