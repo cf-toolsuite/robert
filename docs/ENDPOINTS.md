@@ -121,7 +121,7 @@ http POST :8080/fetch uri=https://github.com/cf-toolsuite/cf-butler.git filePath
 This endpoint is only available when `spring.profiles.active` includes `advanced` mode.  When in `advanced` mode, you must ingest a repository before initiating a chat request.
 
 ```python
-GET /chat
+POST /chat
 ```
 
 Converse with an AI chatbot that understands the source that has been ingested.  Ask a question, get a response.

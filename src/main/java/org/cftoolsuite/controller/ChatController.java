@@ -1,11 +1,12 @@
 package org.cftoolsuite.controller;
 
-import org.cftoolsuite.service.ChatService;
+import org.apache.commons.collections4.CollectionUtils;
+import org.cftoolsuite.domain.chat.Inquiry;
+import org.cftoolsuite.service.chat.ChatService;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 
 
 @Profile("advanced")
@@ -18,10 +19,21 @@ public class ChatController {
         this.chatService = chatService;
     }
 
-    @GetMapping("/chat")
-    public ResponseEntity<String> chat(@RequestParam("q") String message) {
-        String response = chatService.askQuestion(message);
-        return ResponseEntity.ok(response);
+    @PostMapping("/api/chat")
+    public ResponseEntity<String> chat(@RequestBody Inquiry inquiry) {
+        if (CollectionUtils.isNotEmpty(inquiry.filter())) {
+            return ResponseEntity.ok(chatService.respondToQuestion(inquiry.question(), inquiry.filter()));
+        } else {
+            return ResponseEntity.ok(chatService.respondToQuestion(inquiry.question()));
+        }
     }
 
+    @PostMapping("/api/stream/chat")
+    public ResponseEntity<Flux<String>> streamChat(@RequestBody Inquiry inquiry) {
+        if (CollectionUtils.isNotEmpty(inquiry.filter())) {
+            return ResponseEntity.ok(chatService.streamResponseToQuestion(inquiry.question(), inquiry.filter()));
+        } else {
+            return ResponseEntity.ok(chatService.streamResponseToQuestion(inquiry.question()));
+        }
+    }
 }

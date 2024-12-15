@@ -258,12 +258,12 @@ public class GitClient {
             .map(p -> {
                 int lastDotIndex = p.lastIndexOf('.');
                 if (lastDotIndex == -1) {
-                    return true; // No extension, so return true
+                    return false; // No extension, so return false
                 }
                 String extension = p.substring(lastDotIndex + 1);
                 return allowedExtensions.contains(extension);
             })
-            .orElse(true); // If path is null or empty, return true
+            .orElse(true);
     }
 
     public Map<String, String> readFilesFromPackages(Repository repo, Set<String> packageNames, String commit)

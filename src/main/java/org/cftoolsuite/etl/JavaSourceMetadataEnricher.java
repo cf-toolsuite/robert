@@ -39,17 +39,27 @@ public class JavaSourceMetadataEnricher implements DocumentTransformer {
 
 	@Override
 	public List<Document> apply(List<Document> documents) {
-		try {
             List<Document> enrichedDocuments = new ArrayList<>();
+            ObjectNode node = null;
             for (Document document : documents) {
                 if (!CollectionUtils.isEmpty(document.getMetadata()) && document.getMetadata().containsKey("source")) {
                     if (( (String) document.getMetadata().get("source")).endsWith(".java")) {
                         log.info("-- Enriching Java source metadata for: {}", document.getMetadata().get("source"));
-                        ObjectNode node = parse(document.getContent());
+                        try {
+                            node = parse(document.getContent());
+                        } catch (IOException e) {
+                            log.warn("Error while parsing Java source metadata for {}. Skipping!", document.getMetadata().get("source"));
+                            continue;
+                        }
                         String[] jsonKeys = new String[] { "package", "imports", "type", "externalMethodCalls" };
                         Map<String, Object> metadata = new HashMap<>();
                         for (String jsonKey: jsonKeys) {
-                            metadata.put(jsonKey, objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(node.get(jsonKey)));
+                            try {
+                                metadata.put(jsonKey, objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(node.get(jsonKey)));
+                            } catch (IOException e) {
+                                log.warn("Error while enriching Java source metadata for {}. Skipping!", document.getMetadata().get("source"));
+                                continue;
+                            }
                         }
                         metadata.putAll(document.getMetadata());
                         enrichedDocuments.add(new Document(document.getContent(), metadata));
@@ -57,10 +67,6 @@ public class JavaSourceMetadataEnricher implements DocumentTransformer {
                 }
             }
             return enrichedDocuments;
-        } catch (Exception e) {
-            throw new RuntimeException("Error while enriching Java source metadata", e);
-        }
-
 	}
 
     protected ObjectNode parse(String content) throws IOException {

@@ -8,12 +8,11 @@ import org.cftoolsuite.client.GitClient;
 import org.cftoolsuite.client.PullRequestClientFactory;
 import org.cftoolsuite.etl.GitRepositoryIngester;
 import org.cftoolsuite.etl.JavaSourceMetadataEnricher;
-import org.cftoolsuite.service.ChatService;
+import org.cftoolsuite.service.chat.ChatService;
 import org.cftoolsuite.service.DependencyAwareRefactoringService;
 import org.cftoolsuite.service.RefactoringService;
 import org.cftoolsuite.service.SearchService;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.memory.InMemoryChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.ListableBeanFactory;
@@ -88,7 +87,7 @@ public class Advanced {
     }
 
     @Bean ChatService chatService(ChatModel model, VectorStore vectorStore) {
-        return new ChatService(ChatClient.builder(model), vectorStore, new InMemoryChatMemory());
+        return new ChatService(model, vectorStore);
     }
 
 }

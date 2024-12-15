@@ -2,7 +2,7 @@ plugins {
 	id 'java'
 	id 'org.cyclonedx.bom' version '1.10.0'
 	id 'com.gorylenko.gradle-git-properties' version '2.4.2'
-	id 'org.springframework.boot' version '3.4.0-M3'
+	id 'org.springframework.boot' version '3.4.0'
 	id 'io.spring.dependency-management' version '1.1.6'
 	id 'org.eclipse.jkube.kubernetes' version '1.17.0'
 }
@@ -23,7 +23,7 @@ repositories {
 }
 
 ext {
-	set('springAiVersion', "1.0.0-M3-PLATFORM")
+	set('springAiVersion', "1.0.0-SNAPSHOT")
 }
 
 dependencies {
@@ -45,22 +45,25 @@ dependencies {
 	if (project.hasProperty('vector-db-provider') && project.getProperty('vector-db-provider') == 'weaviate') {
 		implementation 'org.springframework.ai:spring-ai-weaviate-store-spring-boot-starter'
 	}
-	implementation 'io.pivotal.cfenv:java-cfenv-all:3.3.0'
-	implementation 'org.springframework.cloud:spring-cloud-bindings:2.0.4'
-	implementation 'org.springframework.ai:spring-ai-spring-cloud-bindings'
 	implementation 'org.apache.commons:commons-lang3'
-	implementation 'com.github.javaparser:javaparser-core-serialization:3.26.2'
-	implementation 'org.eclipse.jgit:org.eclipse.jgit:7.0.0.202409031743-r'
-	implementation 'org.kohsuke:github-api:1.326'
-	implementation ('org.gitlab4j:gitlab4j-api:5.7.0') {
-		exclude group: 'commons-logging', module: 'commons-logging'
-	}
-	implementation 'io.github.cdancy:bitbucket-rest:3.1.1'
-	implementation 'io.github.hkarthik7:azd:5.0.13'
 	if (project.hasProperty('vector-db-provider') || project.hasProperty('model-api-provider')) {
 		implementation 'io.micrometer:micrometer-tracing-bridge-otel'
 		implementation 'io.opentelemetry:opentelemetry-exporter-zipkin'
 	}
+	implementation 'io.pivotal.cfenv:java-cfenv:3.3.0'
+	implementation 'io.pivotal.cfenv:java-cfenv-boot:3.3.0'
+	implementation 'com.cedarsoftware:json-io:4.30.0'
+	implementation 'org.springframework.cloud:spring-cloud-bindings:2.0.4'
+	implementation 'org.springframework.ai:spring-ai-spring-cloud-bindings'
+	implementation 'org.apache.commons:commons-collections4:4.4'
+	implementation 'com.github.javaparser:javaparser-core-serialization:3.26.2'
+	implementation 'org.eclipse.jgit:org.eclipse.jgit:7.1.0.202411261347-r'
+	implementation 'org.kohsuke:github-api:1.326'
+	implementation ('org.gitlab4j:gitlab4j-api:5.8.0') {
+		exclude group: 'commons-logging', module: 'commons-logging'
+	}
+	implementation 'io.github.cdancy:bitbucket-rest:3.1.1'
+	implementation 'io.github.hkarthik7:azd:6.0.0'
 	runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 	developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'

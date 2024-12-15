@@ -85,7 +85,7 @@ spring:
   config:
     activate:
       on-profile: groq-cloud
-    import: "optional:file:./config/creds.yml"
+    import: "${SPRING_CONFIG_IMPORT:optional:file:./config/creds.yml}"
 
   ai:
     openai:
@@ -94,6 +94,7 @@ spring:
         options:
           model: ${CHAT_MODEL:llama-3.1-70b-versatile}
       embedding:
+        base_url: ${EMBEDDING_BASEURL:https://api.openai.com}
         options:
           model: ${EMBEDDING_MODEL:text-embedding-3-large}
 
@@ -103,7 +104,7 @@ spring:
   config:
     activate:
       on-profile: openai
-    import: "optional:file:./config/creds.yml"
+    import: "${SPRING_CONFIG_IMPORT:optional:file:./config/creds.yml}"
 
   ai:
     openai:
@@ -166,7 +167,8 @@ spring:
 
   docker:
     compose:
-      file: ./docker-compose.chroma.yml
+      file:
+        - ./docker-compose.chroma.yml
 
 ---
 
@@ -211,7 +213,6 @@ spring:
     compose:
       file:
         - ./docker-compose.redis.yml
-        - ./docker-compose.${storage.provider}.yml
 
 ---
 
@@ -231,7 +232,6 @@ spring:
     compose:
       file:
         - ./docker-compose.weaviate.yml
-        - ./docker-compose.${storage.provider}.yml
 
 ---
 
@@ -241,6 +241,12 @@ spring:
       on-profile: dev
 
   ai:
+    ollama:
+      init:
+        pull-model-strategy: always
+        timeout: 15m
+        max-retries: 3
+        keep_alive: 15m
     vectorstore:
       pgvector:
         remove-existing-vector-store-table: true
@@ -257,3 +263,4 @@ logging:
   level:
     org.cftoolsuite: TRACE
     com.fasterxml.jackson: TRACE
+    org.springframework.ai: DEBUG
