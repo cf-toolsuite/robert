@@ -10,7 +10,8 @@ Subscription offerings like: [Github Copilot](https://docs.github.com/en/copilot
 
 R*bert is an alternative that taps into the corpus of knowledge continuing to evolve in LLMs and employs carefully constructed prompts to refactor slices of source code.
 
-* [Background](docs/BACKGROUND.md)
+Use standalone or with [robert-ui](https://github.com/cf-toolsuite/robert-ui).
+
 * [Prerequisites](docs/PREREQUISITES.md)
 * [Tools](docs/TOOLS.md)
 * How to
