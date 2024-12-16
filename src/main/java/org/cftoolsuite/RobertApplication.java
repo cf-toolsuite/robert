@@ -10,7 +10,7 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 @ConfigurationPropertiesScan
 public class RobertApplication {
 
-    private static final Set<String> vectorStoreProfiles = Set.of("chroma", "pgvector", "redis");
+    private static final Set<String> vectorStoreProfiles = Set.of("chroma", "pgvector", "redis", "weaviate");
 
     public static void main(String[] args) {
         SpringApplication app = new SpringApplication(RobertApplication.class);
