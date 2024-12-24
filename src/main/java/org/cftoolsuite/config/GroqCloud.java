@@ -17,9 +17,12 @@ class GroqCloud {
     @Bean
     public EmbeddingModel embeddingModel(PropertyResolver resolver) {
         return new OpenAiEmbeddingModel(
-            new OpenAiApi(resolver.getProperty("spring.ai.openai.embedding.base_url"), resolver.getProperty("spring.ai.openai.embedding.api-key")),
+            new OpenAiApi(
+                resolver.getProperty("spring.ai.openai.embedding.base_url"),
+                resolver.getProperty("spring.ai.openai.embedding.api-key")
+            ),
             MetadataMode.EMBED,
-            OpenAiEmbeddingOptions.builder().withModel(resolver.getProperty("spring.ai.openai.embedding.options.model")).build()
+            OpenAiEmbeddingOptions.builder().model(resolver.getProperty("spring.ai.openai.embedding.options.model")).build()
         );
     }
 }
