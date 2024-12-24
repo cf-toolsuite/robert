@@ -19,7 +19,7 @@ public class ChatController {
         this.chatService = chatService;
     }
 
-    @PostMapping("/api/chat")
+    @PostMapping("/chat")
     public ResponseEntity<String> chat(@RequestBody Inquiry inquiry) {
         if (CollectionUtils.isNotEmpty(inquiry.filter())) {
             return ResponseEntity.ok(chatService.respondToQuestion(inquiry.question(), inquiry.filter()));
@@ -28,7 +28,7 @@ public class ChatController {
         }
     }
 
-    @PostMapping("/api/stream/chat")
+    @PostMapping("/stream/chat")
     public ResponseEntity<Flux<String>> streamChat(@RequestBody Inquiry inquiry) {
         if (CollectionUtils.isNotEmpty(inquiry.filter())) {
             return ResponseEntity.ok(chatService.streamResponseToQuestion(inquiry.question(), inquiry.filter()));

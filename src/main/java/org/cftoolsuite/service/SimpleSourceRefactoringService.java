@@ -68,32 +68,24 @@ public class SimpleSourceRefactoringService implements RefactoringService {
 
         Map<String, String> targetMap = new HashMap<>();
 
-        ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
-        sourceMap.forEach((key, value) -> {
-            executor.schedule(() -> {
-                log.info("-- Attempting to refactor {}", key);
-                String refactoredValue = refactorSource(request.refactorPrompt(), value);
-                targetMap.put(key, refactoredValue);
-            }, Long.parseLong(delay), TimeUnit.SECONDS);
-        });
+        try (ScheduledExecutorService executor = Executors.newScheduledThreadPool(1)) {
+            sourceMap.forEach((key, value) -> {
+                executor.schedule(() -> {
+                    log.info("-- Attempting to refactor {}", key);
+                    String refactoredValue = refactorSource(request.refactorPrompt(), value);
+                    targetMap.put(key, refactoredValue);
+                }, Long.parseLong(delay), TimeUnit.SECONDS);
+            });
 
-        executor.shutdown();
-        try {
-            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.MINUTES);
-        } catch (InterruptedException e) {
-            throw new IOException("Refactoring was interrupted.", e);
+            executor.shutdown();
+            try {
+                executor.awaitTermination(Long.MAX_VALUE, TimeUnit.MINUTES);
+            } catch (InterruptedException e) {
+                throw new IOException("Refactoring was interrupted.", e);
+            }
         }
 
-        String branchName = "refactor-" + UUID.randomUUID().toString();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        String commitMessage = String.format("Refactored by %s on %s", SimpleSourceRefactoringService.class.getName(), LocalDateTime.now().format(formatter));
-
-        gitClient.writeFiles(repo, targetMap, branchName, commitMessage);
-        log.info("Refactoring completed on {}.", branchName);
-        gitClient.push(request, repo, branchName);
-        String pullRequestUrl = pullRequestClientFactory.get(request.uri()).pr(repo, request, branchName, commitMessage);
-
-        return new GitResponse(prompt, request.uri(), branchName, pullRequestUrl, targetMap.keySet());
+        return completeRefactor(gitClient, pullRequestClientFactory, request, repo, targetMap, prompt);
     }
 
     protected String refactorSource(String articulation, String source) {

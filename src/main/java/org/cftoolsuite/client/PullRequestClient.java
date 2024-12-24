@@ -21,7 +21,7 @@ public interface PullRequestClient {
             if ("origin".equals(remote.getName())) {
                 List<URIish> uris = remote.getURIs();
                 if (!uris.isEmpty()) {
-                    remoteUrl = uris.get(0).toString();
+                    remoteUrl = uris.getFirst().toString();
                     break;
                 }
             }

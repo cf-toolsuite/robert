@@ -129,7 +129,9 @@ Converse with an AI chatbot that understands the source that has been ingested. 
 **Sample interaction**
 
 ```bash
-http :8080 q="Are there any occurrences of the Lombok Builder annotation?"
+❯ http POST :8080/chat \
+  Content-Type:application/json \
+  question="Are there any occurrences of the Lombok Builder annotation?"
 ```
 
 ### Refactor

@@ -1,20 +1,5 @@
 package org.cftoolsuite.service;
 
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
-import org.apache.commons.lang3.StringUtils;
 import org.cftoolsuite.client.GitClient;
 import org.cftoolsuite.client.GitOperationException;
 import org.cftoolsuite.client.PullRequestClientFactory;
@@ -28,10 +13,15 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.ai.vectorstore.filter.Filter;
-import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.util.CollectionUtils;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class DependencyAwareRefactoringService implements RefactoringService {
 
@@ -84,7 +74,7 @@ public class DependencyAwareRefactoringService implements RefactoringService {
                 .stream()
                 .collect(Collectors.groupingBy(
                     d -> (String) d.getMetadata().get("source"),
-                    Collectors.mapping(Document::getContent, Collectors.joining("\n"))
+                    Collectors.mapping(Document::getText, Collectors.joining("\n"))
                 ));
 
         Set<FileSource> candidates =
@@ -97,11 +87,9 @@ public class DependencyAwareRefactoringService implements RefactoringService {
             return new GitResponse(prompt, request.uri(), null, null, Collections.emptySet());
         }
 
-        Set<FileSource> refactoredSources = new HashSet<>();
-
         // Step 2: Refactor without taking dependencies into account
         Set<FileSource> refactoredSourcesWithoutTakingDependenciesIntoAccount = refactor(request.refactorPrompt(), candidates, "");
-        refactoredSources.addAll(refactoredSourcesWithoutTakingDependenciesIntoAccount);
+        Set<FileSource> refactoredSources = new HashSet<>(refactoredSourcesWithoutTakingDependenciesIntoAccount);
 
         // Step 3: Refactor taking dependencies into account
         Map<String, String> potentialDependencies = gitClient.readFiles(repo, null, request.allowedExtensions(), request.commit());
@@ -117,16 +105,7 @@ public class DependencyAwareRefactoringService implements RefactoringService {
                 .stream()
                 .collect(Collectors.toMap(FileSource::filePath, FileSource::content));
 
-        String branchName = "refactor-" + UUID.randomUUID().toString();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        String commitMessage = String.format("Refactored by %s on %s", SimpleSourceRefactoringService.class.getName(), LocalDateTime.now().format(formatter));
-
-        gitClient.writeFiles(repo, targetMap, branchName, commitMessage);
-        log.info("Refactoring completed on {}.", branchName);
-        gitClient.push(request, repo, branchName);
-        String pullRequestUrl = pullRequestClientFactory.get(request.uri()).pr(repo, request, branchName, commitMessage);
-
-        return new GitResponse(prompt, request.uri(), branchName, pullRequestUrl, targetMap.keySet());
+        return completeRefactor(gitClient, pullRequestClientFactory, request, repo, targetMap, prompt);
     }
 
     // ALERT: Open issues in spring-ai to watch
@@ -140,12 +119,14 @@ public class DependencyAwareRefactoringService implements RefactoringService {
             store
                 .similaritySearch(
                     SearchRequest
+                        .builder()
                         .query(query)
-                        .withFilterExpression(
-                            assembleFilterExpression(request, origin, latestCommit)
+                        .filterExpression(
+                            SearchAssistant.assembleFilterExpression(request, origin, latestCommit)
                         )
-                        .withSimilarityThresholdAll()
-                        .withTopK(100)
+                        .similarityThresholdAll()
+                        .topK(100)
+                        .build()
                 );
         log.trace("Refactor candidates are: {}", candidates);
         return candidates;
@@ -153,19 +134,20 @@ public class DependencyAwareRefactoringService implements RefactoringService {
 
     protected Set<FileSource> refactor(String articulation, Set<FileSource> candidates, String dependenciesManagementStanza) throws IOException{
         Set<FileSource> refactoredSources = new HashSet<>();
-        ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
-        candidates.forEach(d -> {
-            executor.schedule(() -> {
-                    String files = String.format("filePath: %s%ncontent: %s", d.filePath(), d.content());
-                    log.info("-- Attempting to refactor {}", files);
-                    refactoredSources.addAll(refactorSource(articulation, dependenciesManagementStanza, files));
-            }, Long.parseLong(this.tpmDelay), TimeUnit.SECONDS);
-        });
-        executor.shutdown();
-        try {
-            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.MINUTES);
-        } catch (InterruptedException e) {
-            throw new IOException("Refactoring was interrupted.", e);
+        try (ScheduledExecutorService executor = Executors.newScheduledThreadPool(1)) {
+            candidates.forEach(d -> {
+                executor.schedule(() -> {
+                        String files = String.format("filePath: %s%ncontent: %s", d.filePath(), d.content());
+                        log.info("-- Attempting to refactor {}", files);
+                        refactoredSources.addAll(refactorSource(articulation, dependenciesManagementStanza, files));
+                }, Long.parseLong(this.tpmDelay), TimeUnit.SECONDS);
+            });
+            executor.shutdown();
+            try {
+                executor.awaitTermination(Long.MAX_VALUE, TimeUnit.MINUTES);
+            } catch (InterruptedException e) {
+                throw new IOException("Refactoring was interrupted.", e);
+            }
         }
         return refactoredSources;
     }
@@ -183,20 +165,4 @@ public class DependencyAwareRefactoringService implements RefactoringService {
             .entity(new ParameterizedTypeReference<List<FileSource>>() {});
     }
 
-    private Filter.Expression assembleFilterExpression(GitRequest request, String origin, String latestCommit) {
-        FilterExpressionBuilder b = new FilterExpressionBuilder();
-        String commit = StringUtils.isBlank(request.commit()) ? latestCommit : request.commit();
-        if (CollectionUtils.isEmpty(request.allowedExtensions())) {
-            return b.and(b.eq("commit", commit), b.eq("origin", origin)).build();
-        }
-        Object[] fileExtensions = request.allowedExtensions().toArray(String[]::new);
-        return
-            b.and(
-                b.and(
-                    b.eq("commit", commit), b.eq("origin", origin)
-                ),
-                b.in("file-extension", fileExtensions)
-            )
-            .build();
-    }
 }

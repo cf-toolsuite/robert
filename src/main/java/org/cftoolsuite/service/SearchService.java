@@ -1,11 +1,5 @@
 package org.cftoolsuite.service;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import org.apache.commons.lang3.StringUtils;
 import org.cftoolsuite.client.GitClient;
 import org.cftoolsuite.client.GitOperationException;
@@ -17,9 +11,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.ai.vectorstore.filter.Filter;
-import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
-import org.springframework.util.CollectionUtils;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class SearchService {
 
@@ -35,13 +32,12 @@ public class SearchService {
 
     public String readFile(GitRequest request) {
         try {
-            String filePath = (String) request.filePaths().iterator().next();
+            String filePath = request.filePaths().iterator().next();
             log.debug("Reading file: {}", filePath);
             Repository repo = gitClient.getRepository(request);
             String commitToUse = StringUtils.defaultIfBlank(request.commit(), gitClient.getLatestCommit(repo).name());
             Map<String, String> result = gitClient.readFile(repo, filePath, commitToUse);
-            String contents = result.values().iterator().next();
-            return contents;
+            return result.values().iterator().next();
         } catch (IOException ioe) {
             throw new GitOperationException("Error reading file", ioe);
         } catch (IllegalArgumentException iae) {
@@ -68,34 +64,20 @@ public class SearchService {
             store
                 .similaritySearch(
                     SearchRequest
+                        .builder()
                         .query(request.discoveryPrompt())
-                        .withFilterExpression(
-                            assembleFilterExpression(request, origin, latestCommit)
+                        .filterExpression(
+                            SearchAssistant.assembleFilterExpression(request, origin, latestCommit)
                         )
-                        .withSimilarityThresholdAll()
-                        .withTopK(100)
+                        .similarityThresholdAll()
+                        .topK(100)
+                        .build()
                 );
         log.trace("Search candidates are: {}", candidates);
+        assert candidates != null;
         return candidates
                 .stream()
                     .map(d -> (String) d.getMetadata().get("source"))
                     .collect(Collectors.toSet());
-    }
-
-    private Filter.Expression assembleFilterExpression(GitRequest request, String origin, String latestCommit) {
-        FilterExpressionBuilder b = new FilterExpressionBuilder();
-        String commit = StringUtils.isBlank(request.commit()) ? latestCommit : request.commit();
-        if (CollectionUtils.isEmpty(request.allowedExtensions())) {
-            return b.and(b.eq("commit", commit), b.eq("origin", origin)).build();
-        }
-        Object[] fileExtensions = request.allowedExtensions().toArray(String[]::new);
-        return
-            b.and(
-                b.and(
-                    b.eq("commit", commit), b.eq("origin", origin)
-                ),
-                b.in("file-extension", fileExtensions)
-            )
-            .build();
     }
 }

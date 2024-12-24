@@ -35,7 +35,7 @@ public class GitlabPullRequestClient implements PullRequestClient {
                     body,
                     getAssigneeIdFromUsername(gitLabApi, request.username())
                 );
-                result = mergeRequest.getWebUrl().toString();
+                result = mergeRequest.getWebUrl();
                 log.info("Merge request created: {}", result);
             } catch (GitLabApiException | URISyntaxException | IOException e) {
                 throw new RuntimeException("Failed to create merge request", e);

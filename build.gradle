@@ -23,7 +23,7 @@ repositories {
 }
 
 ext {
-	set('springAiVersion', "1.0.0-SNAPSHOT")
+	set('springAiVersion', "1.0.0-M5")
 }
 
 dependencies {
@@ -115,17 +115,17 @@ kubernetes {
     }
 }
 
-task setVersion {
-    doLast {
-        def newVersion = project.hasProperty('newVersion') ? project.newVersion : version
-        ant.propertyfile(file: "gradle.properties") {
-            entry(key: "version", value: newVersion)
-        }
-    }
+tasks.register('setVersion') {
+	doLast {
+		def newVersion = project.hasProperty('newVersion') ? project.newVersion : version
+		ant.propertyfile(file: "gradle.properties") {
+			entry(key: "version", value: newVersion)
+		}
+	}
 }
 
-task printArtifactPath {
-    doLast {
-        println bootJar.archiveFile.get().asFile.absolutePath
-    }
+tasks.register('printArtifactPath') {
+	doLast {
+		println bootJar.archiveFile.get().asFile.absolutePath
+	}
 }
