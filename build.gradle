@@ -64,7 +64,7 @@ dependencies {
 		exclude group: 'commons-logging', module: 'commons-logging'
 	}
 	implementation 'io.github.cdancy:bitbucket-rest:3.1.1'
-	implementation 'io.github.hkarthik7:azd:6.0.0'
+	implementation 'io.github.hkarthik7:azd:6.0.1'
 	runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 	developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
