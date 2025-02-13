@@ -59,7 +59,7 @@ dependencies {
 	implementation 'org.apache.commons:commons-collections4:4.4'
 	implementation 'com.github.javaparser:javaparser-core-serialization:3.26.3'
 	implementation 'org.eclipse.jgit:org.eclipse.jgit:7.1.0.202411261347-r'
-	implementation 'org.kohsuke:github-api:1.326'
+	implementation 'org.kohsuke:github-api:1.327'
 	implementation ('org.gitlab4j:gitlab4j-api:5.8.0') {
 		exclude group: 'commons-logging', module: 'commons-logging'
 	}
