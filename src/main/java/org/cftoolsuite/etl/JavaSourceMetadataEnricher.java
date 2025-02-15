@@ -46,7 +46,7 @@ public class JavaSourceMetadataEnricher implements DocumentTransformer {
                     if (( (String) document.getMetadata().get("source")).endsWith(".java")) {
                         log.info("-- Enriching Java source metadata for: {}", document.getMetadata().get("source"));
                         try {
-                            node = parse(document.getContent());
+                            node = parse(document.getText());
                         } catch (IOException e) {
                             log.warn("Error while parsing Java source metadata for {}. Skipping!", document.getMetadata().get("source"));
                             continue;
@@ -62,7 +62,7 @@ public class JavaSourceMetadataEnricher implements DocumentTransformer {
                             }
                         }
                         metadata.putAll(document.getMetadata());
-                        enrichedDocuments.add(new Document(document.getContent(), metadata));
+                        enrichedDocuments.add(new Document(document.getText(), metadata));
                     }
                 }
             }
